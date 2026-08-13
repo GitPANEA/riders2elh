@@ -12,7 +12,7 @@ Nessun repository Git/SVN inizializzato in questa directory al momento.
 
 ```bash
 mvn clean compile          # compila
-mvn clean package          # compila e produce target/riderpay.jar
+mvn clean package          # compila e produce target/riders2eLH.jar
 mvn spring-boot:run         # avvio locale (richiede DB_HOST/DB_PORT/DB_SERVICE/DB_USER/DB_PASSWORD o profilo -Dspring.profiles.active=local)
 ```
 
@@ -24,19 +24,29 @@ Non esiste `src/test/`: nessun test automatizzato presente nel progetto, nonosta
 mvn clean package deploy -Pdev
 ```
 
-Il profilo Maven `dev` (attivo di default) copia `target/riderpay.jar` via SCP (task Ant `<scp>` in `maven-antrun-plugin`, fase `deploy`) sull'host configurato nella proprietà `remote.deploy.host` del `pom.xml`, usando la chiave privata in `remote.deploy.keyfile` (deve essere in formato PEM classico `RSA PRIVATE KEY`, **non** il formato OpenSSH moderno — JSch 0.1.55 non lo supporta). Dopo il deploy, sul server:
+Il profilo Maven `dev` (attivo di default) copia `target/riders2eLH.jar` via SCP (task Ant `<scp>` in `maven-antrun-plugin`, fase `deploy`) sull'host configurato nella proprietà `remote.deploy.host` del `pom.xml`, usando la chiave privata in `remote.deploy.keyfile` (deve essere in formato PEM classico `RSA PRIVATE KEY`, **non** il formato OpenSSH moderno — JSch 0.1.55 non lo supporta). Dopo il deploy, sul server:
 
 ```bash
-sudo systemctl restart riderpay
-sudo systemctl status riderpay
-journalctl -u riderpay -n 50 --no-pager
+sudo systemctl restart riders2eLH
+sudo systemctl status riders2eLH
+journalctl -u riders2eLH -n 50 --no-pager
 ```
 
-`deploy/riderpay.service` è la unit systemd di riferimento (jar eseguito come processo standalone con Tomcat embedded, non un WAR su Tomcat esterno). I segreti non stanno mai nel repo: vanno in un `EnvironmentFile` esterno sul server (`/opt/riderpay/riderpay.env`, permessi `600`), referenziato dalla unit — `DB_PASSWORD` e `KEYSTORE_PASSWORD`.
+`deploy/riders2eLH.service` è la unit systemd di riferimento (jar eseguito come processo standalone con Tomcat embedded, non un WAR su Tomcat esterno). I segreti non stanno mai nel repo: vanno in un `EnvironmentFile` esterno sul server (`/opt/riders2eLH/riders2eLH.env`, permessi `600`), referenziato dalla unit — `DB_PASSWORD` e `KEYSTORE_PASSWORD`.
 
-**HTTPS**: la porta 9443 serve TLS terminato da Tomcat embedded (`server.ssl.*` in `application-local.yml`), non c'è reverse proxy davanti. Il keystore PKCS12 sta sul server in `/opt/riderpay/riderpay-keystore.p12` (permessi `600`, proprietario = utenza del servizio), generato con `keytool -genkeypair -alias riderpay -storetype PKCS12 ... -ext "SAN=ip:10.10.7.46"` — il `SAN` è necessario perché i client validano quello, non il `CN`. `keytool` non è nel `PATH` sul server: va invocato per percorso assoluto dal JRE 21 usato dalla unit. Il certificato è **self-signed**, quindi i client devono disattivare la verifica (`curl -k`, Postman: SSL certificate verification off); per uscire da dev serve un certificato della CA aziendale. Nota che attivando `server.ssl` la 9443 non risponde più in HTTP.
+**HTTPS**: la porta 9443 serve TLS terminato da Tomcat embedded (`server.ssl.*` in `application-local.yml`), non c'è reverse proxy davanti. Il keystore PKCS12 sta sul server in `/opt/riders2eLH/riders2eLH-keystore.p12` (permessi `600`, proprietario = utenza del servizio), generato con `keytool -genkeypair -alias riderpay -storetype PKCS12 ... -ext "SAN=ip:10.10.7.46"` — il `SAN` è necessario perché i client validano quello, non il `CN`. `keytool` non è nel `PATH` sul server: va invocato per percorso assoluto dal JRE 21 usato dalla unit. Il certificato è **self-signed**, quindi i client devono disattivare la verifica (`curl -k`, Postman: SSL certificate verification off); per uscire da dev serve un certificato della CA aziendale. Nota che attivando `server.ssl` la 9443 non risponde più in HTTP.
 
 `deploy/README.md` contiene i comandi di setup una tantum sul server (directory, `EnvironmentFile`, unit systemd, generazione del keystore TLS). L'host di deploy è definito in `remote.deploy.host` nel `pom.xml` — quella resta la fonte autorevole in caso di dubbio.
+
+**Rename `riderpay` → `riders2eLH` (13 agosto 2026), fatto solo a livello di build/deploy.** Sono cambiati `artifactId`/`name`/`finalName` nel `pom.xml`, il nome del jar, la unit systemd, `/opt/riders2eLH/` e il prefisso di configurazione `riders2eLH.security.jwt.*`. Tre nomi restano volutamente al vecchio valore, perché non sono etichette ma riferimenti a cose che esistono già fuori dal repo:
+
+| Cosa | Perché non è stato rinominato |
+|---|---|
+| `key-alias: riderpay` (`application-local.yml`) | è l'alias inciso nel keystore PKCS12 alla generazione; cambiarlo senza rigenerare il keystore impedisce l'avvio |
+| `issuer: riderpay-auth-server` (`application.yml`) | finisce nel claim `iss` dei JWT emessi: è un valore di protocollo, da concordare con chi verifica i token |
+| `riderpay_deploy_key` (`remote.deploy.keyfile`) | file di chiave privata fuori dal repo, la cui pubblica è già in `authorized_keys` sul server |
+
+Il package Java resta `it.panea.deliveroo.riderpay` e la directory del progetto resta `riderpay`: sono i punti 2 e 3 del rename, non ancora affrontati. **Sul server la migrazione va eseguita a mano** (sezione dedicata in `deploy/README.md`): finché non è fatta, `mvn deploy` scrive in `/opt/riders2eLH/` mentre systemd serve ancora il vecchio jar da `/opt/riderpay/` — nessun errore, ma le modifiche non compaiono.
 
 ## Architettura
 

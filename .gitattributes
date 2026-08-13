@@ -1,0 +1,5 @@
+# core.autocrlf=true su questa postazione converte i file in CRLF al checkout.
+# Per i file destinati al server Linux il CRLF e un problema concreto: la unit
+# systemd e gli script shell vanno forzati a LF.
+*.service text eol=lf
+*.sh      text eol=lf

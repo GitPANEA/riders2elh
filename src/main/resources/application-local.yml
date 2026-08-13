@@ -7,9 +7,12 @@ server:
   # a https:// nello stesso momento.
   ssl:
     enabled: true
-    key-store: file:/opt/riderpay/riderpay-keystore.p12
+    key-store: file:/opt/riders2eLH/riders2eLH-keystore.p12
     key-store-type: PKCS12
     key-store-password: ${KEYSTORE_PASSWORD}
+    # L'alias resta "riderpay": e quello inciso nel keystore esistente al momento
+    # della sua generazione. Cambiarlo qui senza rigenerare il keystore impedisce
+    # a Tomcat di trovare la chiave e l'avvio fallisce.
     key-alias: riderpay
     enabled-protocols: TLSv1.3,TLSv1.2
 

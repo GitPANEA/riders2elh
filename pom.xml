@@ -12,9 +12,9 @@
   </parent>
 
   <groupId>it.panea.deliveroo</groupId>
-  <artifactId>riderpay</artifactId>
+  <artifactId>riders2eLH</artifactId>
   <version>0.1.0</version>
-  <name>riderpay</name>
+  <name>riders2eLH</name>
   <description>API di ingestione + modello dati Oracle per i pagamenti rider Deliveroo</description>
 
   <properties>
@@ -23,7 +23,9 @@
     <!--.B.- REMOTE DEPLOY Pipeline -->
     <remote.deploy.port>22</remote.deploy.port>
     <remote.deploy.username>f.cavaliere</remote.deploy.username>
-    <!-- riderpay_deploy_key: coppia RSA 4096 generata appositamente per il deploy dev
+    <!-- riderpay_deploy_key: coppia RSA 4096 generata appositamente per il deploy dev.
+         Il nome del file conserva il vecchio nome del progetto: e' un file fuori dal
+         repo, gia' autorizzato sul server, quindi non viene rinominato col progetto.
          (svc-claude.key risultava corrotta/non valida anche dopo la sostituzione dalla stessa
          fonte). Generata gia' in formato PEM classico ("RSA PRIVATE KEY"), compatibile con
          JSch 0.1.55. La chiave pubblica va autorizzata su 10.10.7.46 in
@@ -33,7 +35,7 @@
 
     <!-- default DEV values -->
     <remote.deploy.host>10.10.7.46</remote.deploy.host>
-    <remote.deploy.target.dir>/opt/riderpay</remote.deploy.target.dir>
+    <remote.deploy.target.dir>/opt/riders2eLH</remote.deploy.target.dir>
     <!--.E.- REMOTE DEPLOY Pipeline -->
   </properties>
 
@@ -45,7 +47,7 @@
       </activation>
       <properties>
         <remote.deploy.host>10.10.7.46</remote.deploy.host>
-        <remote.deploy.target.dir>/opt/riderpay</remote.deploy.target.dir>
+        <remote.deploy.target.dir>/opt/riders2eLH</remote.deploy.target.dir>
         <spring.profiles.active>local</spring.profiles.active>
       </properties>
     </profile>
@@ -94,7 +96,7 @@
   </dependencies>
 
   <build>
-    <finalName>riderpay</finalName>
+    <finalName>riders2eLH</finalName>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>

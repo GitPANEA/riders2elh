@@ -1,7 +1,7 @@
 #deploy
 mvn clean package deploy -Pdev
 #post deploy lanciare sul server:
-sudo systemctl restart riderpay
-sudo systemctl status riderpay
+sudo systemctl restart riders2eLH
+sudo systemctl status riders2eLH
 #controllo log:
-journalctl -u riderpay -n 50 --no-pager
+journalctl -u riders2eLH -n 50 --no-pager

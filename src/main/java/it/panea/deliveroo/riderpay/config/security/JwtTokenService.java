@@ -27,7 +27,7 @@ public class JwtTokenService {
     private final String issuer;
 
     public JwtTokenService(RSAPublicKey publicKey, RSAPrivateKey privateKey,
-                            @Value("${riderpay.security.jwt.issuer}") String issuer) {
+                            @Value("${riders2eLH.security.jwt.issuer}") String issuer) {
         JWK jwk = new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
         JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new com.nimbusds.jose.jwk.JWKSet(jwk));
         this.jwtEncoder = new NimbusJwtEncoder(jwkSource);

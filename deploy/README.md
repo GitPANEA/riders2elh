@@ -17,6 +17,12 @@ Finché non viene fatta, un `mvn deploy` copia il nuovo jar in `/opt/riders2eLH/
 systemd continua a servire il vecchio da `/opt/riderpay/`: nessun errore visibile, ma le
 modifiche non compaiono.
 
+L'ordine conta: il passo 1 va fatto **prima** di rimuovere `riderpay.service`. Cancellando
+il file di unit mentre il servizio e ancora attivo, systemd perde il riferimento al processo
+e resta un java orfano che occupa la 9443; il nuovo servizio non parte e l'errore
+("address already in use") non indica la causa reale. In quel caso `systemctl stop` non
+serve piu: va trovato il PID con `ps aux | grep riders` e terminato a mano.
+
 ```bash
 # 1. ferma e disabilita il vecchio servizio
 sudo systemctl stop riderpay
@@ -29,9 +35,16 @@ sudo mv /opt/riders2eLH/riderpay.env /opt/riders2eLH/riders2eLH.env
 sudo mv /opt/riders2eLH/riderpay-keystore.p12 /opt/riders2eLH/riders2eLH-keystore.p12
 sudo rm -f /opt/riders2eLH/riderpay.jar
 
-# 3. installa la nuova unit e rimuovi la vecchia
-sudo cp riders2eLH.service /etc/systemd/system/riders2eLH.service
-sudo rm /etc/systemd/system/riderpay.service
+# 3. porta la unit sul server. NON viene copiata da mvn deploy: il task <scp>
+#    nel pom.xml trasferisce solo ${finalName}.jar. Da eseguire sulla
+#    postazione di sviluppo, nella directory del progetto:
+#
+#      scp -i "C:\Sirfin Documents\ProdKey\riderpay_deploy_key" \
+#          deploy/riders2eLH.service f.cavaliere@10.10.7.46:/tmp/
+#
+#    poi, di nuovo sul server:
+sudo cp /tmp/riders2eLH.service /etc/systemd/system/riders2eLH.service
+sudo rm -f /etc/systemd/system/riderpay.service
 sudo systemctl daemon-reload
 sudo systemctl enable riders2eLH
 

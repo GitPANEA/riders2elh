@@ -23,6 +23,14 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/oauth2/token").permitAll()
+                        // Swagger UI e spec OpenAPI: pubblici, altrimenti cadrebbero nel
+                        // denyAll() finale e la UI risponderebbe 403 (deve caricarsi prima
+                        // che il client abbia un token). ATTENZIONE: così la descrizione
+                        // completa dell'API — endpoint, schemi dei payload, nomi delle
+                        // colonne — è leggibile da chiunque raggiunga il servizio, senza
+                        // autenticazione. Accettabile in dev su rete interna, DA RICHIUDERE
+                        // prima della produzione: vedi CLAUDE.md, sezione Swagger/OpenAPI.
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/v1/**").authenticated()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));

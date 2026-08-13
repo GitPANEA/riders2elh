@@ -129,6 +129,32 @@ Quattro controller sotto `/api/v1`, tutti seguono lo stesso schema (POST ingesti
 
 `GlobalExceptionHandler` centralizza il mapping eccezioni → HTTP: `RisorsaNonTrovataException`→404, `ConflittoConcorrenzaException`→409, `ClientNonAutorizzatoException`→401, `MethodArgumentNotValidException`→400.
 
+### Context path `/riders2elh` (13 agosto 2026)
+
+`server.servlet.context-path: /riders2elh` in `application.yml`: **prefissa tutti i path**, non solo Swagger. `/api/v1/batch` → `/riders2elh/api/v1/batch`, `/oauth2/token` → `/riders2elh/oauth2/token`. Va aggiornato il `baseUrl` della collection Postman e qualunque altro client. Minuscolo per coerenza col package Java e con l'URL concordato; il nome del jar, la unit systemd e `/opt/riders2eLH/` restano `riders2eLH`.
+
+Due punti che il context path **non** risolve, entrambi fuori dal repo:
+
+- **`devws.paneagroup.it`** dipende dal DNS aziendale, non dall'applicazione: il servizio ascolta su tutte le interfacce e risponde a qualunque nome che risolva su `10.10.7.46`.
+- **Il certificato TLS non copre quel nome.** Il keystore è generato con `SAN=ip:10.10.7.46` e i client validano il SAN: chiamando `https://devws.paneagroup.it:9443` si ottiene un errore di *hostname mismatch*, distinto dal solito avviso self-signed. Serve rigenerare il keystore con `-ext "SAN=dns:devws.paneagroup.it,ip:10.10.7.46"`, mantenendo `-alias riderpay`.
+
+Note tecniche: i `requestMatchers` di `SecurityConfig` sono relativi al context path (Spring Security lo rimuove prima del match), quindi `/api/v1/**` e `/swagger-ui/**` continuano a valere invariati. `OpenApiConfig` invece compone il `tokenUrl` dello schema oauth2 come `contextPath + "/oauth2/token"` leggendo `${server.servlet.context-path:}`: un path assoluto punterebbe alla root del server e il pulsante "Authorize" darebbe 404. Se il context path cambia, il `tokenUrl` segue da sé.
+
+### Documentazione OpenAPI / Swagger UI (13 agosto 2026)
+
+`springdoc-openapi-starter-webmvc-ui` 2.6.0 (SpringFox non supporta Boot 3 e non è manutenuto). Due path:
+
+| Path | Cosa |
+|---|---|
+| `https://devws.paneagroup.it:9443/riders2elh/swagger-ui.html` | UI interattiva |
+| `https://devws.paneagroup.it:9443/riders2elh/v3/api-docs` | spec OpenAPI 3 in JSON |
+
+**⚠️ I due path sono `permitAll()` in `SecurityConfig`, quindi la descrizione completa dell'API — endpoint, schemi dei payload, nomi delle colonne — è leggibile senza autenticazione da chiunque raggiunga il servizio.** È una scelta consapevole per l'ambiente di dev (rete interna, TLS già self-signed), non un'omissione: la UI deve caricarsi *prima* che il client abbia un token, quindi non può stare sotto `.authenticated()`. **Da richiudere prima della produzione**, scegliendo tra: rimuovere il `permitAll()` e scaricare solo `/v3/api-docs` col token (nessuna UI dal browser); oppure condizionare il `permitAll()` al profilo attivo, ricordando che il profilo Maven `dev` è quello di default. Senza il `permitAll()` i due path cadono nell'`anyRequest().denyAll()` e la UI risponde `403`.
+
+`OpenApiConfig` (in `config/`) dichiara due schemi di sicurezza alternativi, entrambi disponibili dal pulsante "Authorize": **oauth2** con flusso `client_credentials` (la UI chiama da sé `POST /oauth2/token`) e **bearerAuth** per incollare a mano un token ottenuto altrove — il ripiego se il browser blocca la chiamata al token endpoint per il certificato self-signed non accettato. Senza uno schema dichiarato, ogni "Try it out" su `/api/v1/**` tornerebbe `401`. `TokenController.emettiToken` ha `@SecurityRequirements` (vuoto) perché è pubblico: senza, la UI vi allegherebbe il Bearer facendo credere che serva già un token per ottenerne uno.
+
+**springdoc non legge i javadoc**: la documentazione visibile viene solo dalle annotazioni `@Tag`/`@Operation`/`@ApiResponse`/`@Parameter`. Aggiungendo un endpoint va annotato a mano, altrimenti compare nella UI senza descrizione. Alla data sono annotati tutti i 19 endpoint dei 5 controller. `dto/ErroreResponse` esiste solo per lo schema degli errori: `GlobalExceptionHandler` costruisce una `Map` a runtime, e senza un tipo dichiarato la UI mostrerebbe un oggetto vuoto — **non è usata dal codice**, quindi se si cambiano le chiavi in `errore(...)` va aggiornata a mano (nulla lo impone al compilatore).
+
 ### Autenticazione OAuth2 (client_credentials)
 
 L'app stessa fa da authorization server minimale (nessuna dipendenza da Spring Authorization Server o IdP esterno — implementazione manuale scelta perché serve solo il grant `client_credentials` machine-to-machine, senza consent screen/PKCE/refresh token):

@@ -88,6 +88,14 @@
       <artifactId>spring-security-oauth2-resource-server</artifactId>
     </dependency>
 
+    <!-- OpenAPI 3 + Swagger UI. SpringFox non supporta Spring Boot 3 (non è manutenuto):
+         springdoc è l'unica scelta attuale. La 2.6.0 è allineata a Boot 3.3.x. -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.6.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

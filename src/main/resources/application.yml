@@ -1,3 +1,12 @@
+server:
+  servlet:
+    # Prefisso di TUTTI i path serviti dall'applicazione, non solo di Swagger:
+    # /api/v1/... -> /riders2elh/api/v1/...  e  /oauth2/token -> /riders2elh/oauth2/token.
+    # Chi chiama va aggiornato di conseguenza (baseUrl della collection Postman incluso).
+    # Minuscolo per coerenza con il package Java e con l'URL concordato; il nome del jar
+    # e la unit systemd restano "riders2eLH".
+    context-path: /riders2elh
+
 spring:
   application:
     name: riders2eLH
@@ -14,6 +23,19 @@ spring:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # Endpoint ordinati per tag e per metodo HTTP invece che nell'ordine di scoperta:
+    # senza, l'elenco cambia posizione tra un avvio e l'altro.
+    tags-sorter: alpha
+    operations-sorter: method
+    # I payload di esempio (movimentazioni.json ha migliaia di righe) rendono la UI
+    # pesante da aprire se espansi di default.
+    doc-expansion: none
 
 riders2eLH:
   security:

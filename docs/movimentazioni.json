@@ -1,0 +1,956 @@
+[
+  {
+    "id_movimentazione": "ri_it_b9ddabec-f763-4152-9c80-de0187b95259_56",
+    "id_rider": "b9ddabec",
+    "periodo_da": "2026-06-01",
+    "periodo_a": "2026-06-30",
+    "consegne": [
+      {
+        "data": "2026-06-01",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 35.21
+      },
+      {
+        "data": "2026-06-02",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 40.25
+      },
+      {
+        "data": "2026-06-07",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 20.60
+      },
+      {
+        "data": "2026-06-08",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 33.44
+      },
+      {
+        "data": "2026-06-09",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 30.74
+      },
+      {
+        "data": "2026-06-14",
+        "numero_consegne": 3,
+        "totale_parziale_lordo": 13.60
+      },
+      {
+        "data": "2026-06-15",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 59.96
+      },
+      {
+        "data": "2026-06-16",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 45.21
+      },
+      {
+        "data": "2026-06-21",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 23.81
+      },
+      {
+        "data": "2026-06-22",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 41.79
+      },
+      {
+        "data": "2026-06-23",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 31.41
+      },
+      {
+        "data": "2026-06-29",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 37.57
+      },
+      {
+        "data": "2026-06-30",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 34.32
+      }
+    ],
+    "totali_consegne": {
+      "numero_consegne": 79,
+      "totale_parziale_lordo": 447.91
+    },
+    "modifiche_integrazioni": [
+      {
+        "id_voce": "INDENNITA_FESTIVI",
+        "importo_lordo": 3.27,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -0.65,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": 2.62
+      },
+      {
+        "id_voce": "INDENNITA_MALTEMPO",
+        "importo_lordo": 1.78,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -0.36,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": 1.42
+      }
+    ],
+    "totali_modifiche_integrazioni": {
+      "importo_lordo": 5.05,
+      "ritenuta_percentuale": 20,
+      "ritenuta_importo": -1.01,
+      "iva_percentuale": null,
+      "iva_importo": null,
+      "totale": 4.04
+    },
+    "prospetto_finale": [
+      {
+        "id_voce": "PROSPETTO_ORDINI_CONSEGNATI",
+        "importo_lordo": 447.91,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -89.58,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": 358.33
+      },
+      {
+        "id_voce": "PROSPETTO_MODIFICHE_INTEGRAZIONI",
+        "importo_lordo": 5.05,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -1.01,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": 4.04
+      },
+      {
+        "id_voce": "PROSPETTO_MANCE",
+        "importo_lordo": 9.00,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -1.80,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": 7.20
+      },
+      {
+        "id_voce": "PROSPETTO_TOTALE",
+        "importo_lordo": 461.96,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -92.39,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": 369.57
+      }
+    ],
+    "riepilogo": {
+      "imposta_bollo": -2.00,
+      "percentuale_trattenute_fiscali": 20,
+      "importo_trattenute_fiscali": -92.39,
+      "percentuale_trattenute_previdenziali": null,
+      "importo_trattenute_previdenziali": null,
+      "pagamenti_contanti_gia_riscossi": null,
+      "totale_dovuto": 367.57
+    }
+  },
+  {
+    "id_movimentazione": "ri_it_ffb17cde-2f27-492f-b2bc-42922c70b691_10",
+    "id_rider": "ffb17cde",
+    "periodo_da": "2026-06-01",
+    "periodo_a": "2026-06-30",
+    "consegne": [
+      {
+        "data": "2026-06-01",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 76.69
+      },
+      {
+        "data": "2026-06-02",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 79.87
+      },
+      {
+        "data": "2026-06-03",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 53.74
+      },
+      {
+        "data": "2026-06-04",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 43.19
+      },
+      {
+        "data": "2026-06-05",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 60.31
+      },
+      {
+        "data": "2026-06-06",
+        "numero_consegne": 15,
+        "totale_parziale_lordo": 95.29
+      },
+      {
+        "data": "2026-06-07",
+        "numero_consegne": 13,
+        "totale_parziale_lordo": 92.75
+      },
+      {
+        "data": "2026-06-08",
+        "numero_consegne": 14,
+        "totale_parziale_lordo": 89.15
+      },
+      {
+        "data": "2026-06-09",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 62.76
+      },
+      {
+        "data": "2026-06-10",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 43.29
+      },
+      {
+        "data": "2026-06-11",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 64.35
+      },
+      {
+        "data": "2026-06-12",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 59.31
+      },
+      {
+        "data": "2026-06-13",
+        "numero_consegne": 13,
+        "totale_parziale_lordo": 85.82
+      },
+      {
+        "data": "2026-06-14",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 69.09
+      },
+      {
+        "data": "2026-06-15",
+        "numero_consegne": 17,
+        "totale_parziale_lordo": 120.01
+      },
+      {
+        "data": "2026-06-16",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 73.47
+      },
+      {
+        "data": "2026-06-17",
+        "numero_consegne": 14,
+        "totale_parziale_lordo": 92.97
+      },
+      {
+        "data": "2026-06-18",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 74.64
+      },
+      {
+        "data": "2026-06-19",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 94.48
+      },
+      {
+        "data": "2026-06-20",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 91.26
+      },
+      {
+        "data": "2026-06-21",
+        "numero_consegne": 9,
+        "totale_parziale_lordo": 60.08
+      },
+      {
+        "data": "2026-06-22",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 63.28
+      },
+      {
+        "data": "2026-06-23",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 74.47
+      },
+      {
+        "data": "2026-06-24",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 29.93
+      },
+      {
+        "data": "2026-06-26",
+        "numero_consegne": 9,
+        "totale_parziale_lordo": 42.79
+      },
+      {
+        "data": "2026-06-27",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 23.95
+      },
+      {
+        "data": "2026-06-28",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 38.64
+      },
+      {
+        "data": "2026-06-29",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 51.08
+      },
+      {
+        "data": "2026-06-30",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 50.63
+      }
+    ],
+    "totali_consegne": {
+      "numero_consegne": 300,
+      "totale_parziale_lordo": 1957.29
+    },
+    "modifiche_integrazioni": [
+      {
+        "id_voce": "BONUS_CCNL_4000_CONSEGNE",
+        "importo_lordo": 600.00,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 600.00
+      },
+      {
+        "id_voce": "INDENNITA_NOTTURNI",
+        "importo_lordo": 0.00,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 0.00
+      },
+      {
+        "id_voce": "INDENNITA_FESTIVI",
+        "importo_lordo": 20.65,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 20.65
+      },
+      {
+        "id_voce": "INDENNITA_MALTEMPO",
+        "importo_lordo": 2.17,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 2.17
+      }
+    ],
+    "totali_modifiche_integrazioni": {
+      "importo_lordo": 622.82,
+      "ritenuta_percentuale": null,
+      "ritenuta_importo": null,
+      "iva_percentuale": 0,
+      "iva_importo": 0.00,
+      "totale": 622.82
+    },
+    "prospetto_finale": [
+      {
+        "id_voce": "PROSPETTO_ORDINI_CONSEGNATI",
+        "importo_lordo": 1957.29,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 1957.29
+      },
+      {
+        "id_voce": "PROSPETTO_MODIFICHE_INTEGRAZIONI",
+        "importo_lordo": 622.82,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 622.82
+      },
+      {
+        "id_voce": "PROSPETTO_MANCE",
+        "importo_lordo": 78.50,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 78.50
+      },
+      {
+        "id_voce": "PROSPETTO_TOTALE",
+        "importo_lordo": 2658.61,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 2658.61
+      }
+    ],
+    "riepilogo": {
+      "imposta_bollo": null,
+      "percentuale_trattenute_fiscali": null,
+      "importo_trattenute_fiscali": null,
+      "percentuale_trattenute_previdenziali": null,
+      "importo_trattenute_previdenziali": null,
+      "pagamenti_contanti_gia_riscossi": -31.28,
+      "totale_dovuto": 2627.33
+    }
+  },
+  {
+    "id_movimentazione": "ri_it_ffcd0974-3e6a-434b-82b7-ddd2393f2574_15",
+    "id_rider": "ffcd0974",
+    "periodo_da": "2026-06-01",
+    "periodo_a": "2026-06-30",
+    "consegne": [
+      {
+        "data": "2026-06-01",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 27.84
+      },
+      {
+        "data": "2026-06-02",
+        "numero_consegne": 14,
+        "totale_parziale_lordo": 75.30
+      },
+      {
+        "data": "2026-06-03",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 49.50
+      },
+      {
+        "data": "2026-06-04",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 38.01
+      },
+      {
+        "data": "2026-06-05",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 47.98
+      },
+      {
+        "data": "2026-06-06",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 23.83
+      },
+      {
+        "data": "2026-06-07",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 50.12
+      },
+      {
+        "data": "2026-06-08",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 35.98
+      },
+      {
+        "data": "2026-06-09",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 31.92
+      },
+      {
+        "data": "2026-06-10",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 40.15
+      },
+      {
+        "data": "2026-06-11",
+        "numero_consegne": 9,
+        "totale_parziale_lordo": 44.57
+      },
+      {
+        "data": "2026-06-12",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 53.73
+      },
+      {
+        "data": "2026-06-13",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 33.40
+      },
+      {
+        "data": "2026-06-14",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 34.83
+      },
+      {
+        "data": "2026-06-15",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 31.65
+      },
+      {
+        "data": "2026-06-16",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 27.72
+      },
+      {
+        "data": "2026-06-17",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 46.02
+      },
+      {
+        "data": "2026-06-18",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 29.31
+      },
+      {
+        "data": "2026-06-19",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 23.06
+      },
+      {
+        "data": "2026-06-20",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 42.73
+      },
+      {
+        "data": "2026-06-21",
+        "numero_consegne": 6,
+        "totale_parziale_lordo": 24.43
+      },
+      {
+        "data": "2026-06-22",
+        "numero_consegne": 4,
+        "totale_parziale_lordo": 19.33
+      },
+      {
+        "data": "2026-06-23",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 76.19
+      },
+      {
+        "data": "2026-06-24",
+        "numero_consegne": 9,
+        "totale_parziale_lordo": 48.78
+      },
+      {
+        "data": "2026-06-25",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 43.97
+      },
+      {
+        "data": "2026-06-26",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 31.64
+      },
+      {
+        "data": "2026-06-27",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 27.30
+      },
+      {
+        "data": "2026-06-28",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 19.64
+      },
+      {
+        "data": "2026-06-29",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 51.68
+      },
+      {
+        "data": "2026-06-30",
+        "numero_consegne": 7,
+        "totale_parziale_lordo": 29.52
+      }
+    ],
+    "totali_consegne": {
+      "numero_consegne": 232,
+      "totale_parziale_lordo": 1160.13
+    },
+    "modifiche_integrazioni": [
+      {
+        "id_voce": "CONGUAGLIO_CONTRIBUTO_CALDO",
+        "mese_riferimento": "2026-05",
+        "importo_lordo": 9.10,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 9.10
+      },
+      {
+        "id_voce": "INDENNITA_MALTEMPO",
+        "importo_lordo": 4.13,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 4.13
+      },
+      {
+        "id_voce": "CONTRIBUTO_SALI_MINERALI",
+        "importo_lordo": 4.50,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 4.50
+      },
+      {
+        "id_voce": "CONTRIBUTO_ACQUA",
+        "importo_lordo": 6.60,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 6.60
+      },
+      {
+        "id_voce": "INDENNITA_NOTTURNI",
+        "importo_lordo": 0.00,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 0.00
+      },
+      {
+        "id_voce": "INDENNITA_FESTIVI",
+        "importo_lordo": 5.27,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 5.27
+      }
+    ],
+    "totali_modifiche_integrazioni": {
+      "importo_lordo": 29.60,
+      "ritenuta_percentuale": null,
+      "ritenuta_importo": null,
+      "iva_percentuale": 0,
+      "iva_importo": 0.00,
+      "totale": 29.60
+    },
+    "prospetto_finale": [
+      {
+        "id_voce": "PROSPETTO_ORDINI_CONSEGNATI",
+        "importo_lordo": 1160.13,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 1160.13
+      },
+      {
+        "id_voce": "PROSPETTO_MODIFICHE_INTEGRAZIONI",
+        "importo_lordo": 29.60,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 29.60
+      },
+      {
+        "id_voce": "PROSPETTO_MANCE",
+        "importo_lordo": 61.87,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 61.87
+      },
+      {
+        "id_voce": "PROSPETTO_TOTALE",
+        "importo_lordo": 1251.60,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": 0,
+        "iva_importo": 0.00,
+        "totale": 1251.60
+      }
+    ],
+    "riepilogo": {
+      "imposta_bollo": null,
+      "percentuale_trattenute_fiscali": null,
+      "importo_trattenute_fiscali": null,
+      "percentuale_trattenute_previdenziali": null,
+      "importo_trattenute_previdenziali": null,
+      "pagamenti_contanti_gia_riscossi": -10.35,
+      "totale_dovuto": 1241.25
+    }
+  },
+  {
+    "id_movimentazione": "ri_it_f1ca91d2-fb66-4f58-b710-fc82e1bba16d_46",
+    "id_rider": "f1ca91d2",
+    "periodo_da": "2026-06-01",
+    "periodo_a": "2026-06-30",
+    "consegne": [
+      {
+        "data": "2026-06-01",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 58.88
+      },
+      {
+        "data": "2026-06-02",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 63.20
+      },
+      {
+        "data": "2026-06-03",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 53.23
+      },
+      {
+        "data": "2026-06-04",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 56.42
+      },
+      {
+        "data": "2026-06-05",
+        "numero_consegne": 14,
+        "totale_parziale_lordo": 72.17
+      },
+      {
+        "data": "2026-06-06",
+        "numero_consegne": 4,
+        "totale_parziale_lordo": 25.83
+      },
+      {
+        "data": "2026-06-07",
+        "numero_consegne": 3,
+        "totale_parziale_lordo": 16.81
+      },
+      {
+        "data": "2026-06-08",
+        "numero_consegne": 16,
+        "totale_parziale_lordo": 77.99
+      },
+      {
+        "data": "2026-06-09",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 65.89
+      },
+      {
+        "data": "2026-06-10",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 71.25
+      },
+      {
+        "data": "2026-06-11",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 65.54
+      },
+      {
+        "data": "2026-06-12",
+        "numero_consegne": 17,
+        "totale_parziale_lordo": 93.74
+      },
+      {
+        "data": "2026-06-13",
+        "numero_consegne": 4,
+        "totale_parziale_lordo": 32.93
+      },
+      {
+        "data": "2026-06-14",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 39.51
+      },
+      {
+        "data": "2026-06-15",
+        "numero_consegne": 13,
+        "totale_parziale_lordo": 64.72
+      },
+      {
+        "data": "2026-06-16",
+        "numero_consegne": 10,
+        "totale_parziale_lordo": 64.66
+      },
+      {
+        "data": "2026-06-17",
+        "numero_consegne": 8,
+        "totale_parziale_lordo": 52.06
+      },
+      {
+        "data": "2026-06-18",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 78.56
+      },
+      {
+        "data": "2026-06-19",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 63.84
+      },
+      {
+        "data": "2026-06-20",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 26.56
+      },
+      {
+        "data": "2026-06-22",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 59.52
+      },
+      {
+        "data": "2026-06-23",
+        "numero_consegne": 15,
+        "totale_parziale_lordo": 72.01
+      },
+      {
+        "data": "2026-06-24",
+        "numero_consegne": 14,
+        "totale_parziale_lordo": 80.00
+      },
+      {
+        "data": "2026-06-25",
+        "numero_consegne": 15,
+        "totale_parziale_lordo": 76.82
+      },
+      {
+        "data": "2026-06-26",
+        "numero_consegne": 17,
+        "totale_parziale_lordo": 92.82
+      },
+      {
+        "data": "2026-06-27",
+        "numero_consegne": 4,
+        "totale_parziale_lordo": 26.32
+      },
+      {
+        "data": "2026-06-28",
+        "numero_consegne": 5,
+        "totale_parziale_lordo": 20.71
+      },
+      {
+        "data": "2026-06-29",
+        "numero_consegne": 12,
+        "totale_parziale_lordo": 83.63
+      },
+      {
+        "data": "2026-06-30",
+        "numero_consegne": 11,
+        "totale_parziale_lordo": 62.38
+      }
+    ],
+    "totali_consegne": {
+      "numero_consegne": 302,
+      "totale_parziale_lordo": 1718.00
+    },
+    "modifiche_integrazioni": [
+      {
+        "id_voce": "CONGUAGLIO_CONTRIBUTO_CALDO",
+        "mese_riferimento": "2026-05",
+        "importo_lordo": 8.30,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -1.66,
+        "iva_percentuale": 22,
+        "iva_importo": 1.83,
+        "totale": 8.47
+      },
+      {
+        "id_voce": "CONTRIBUTO_SALI_MINERALI",
+        "importo_lordo": 4.00,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -0.80,
+        "iva_percentuale": 22,
+        "iva_importo": 0.88,
+        "totale": 4.08
+      },
+      {
+        "id_voce": "CONTRIBUTO_ACQUA",
+        "importo_lordo": 5.20,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -1.04,
+        "iva_percentuale": 22,
+        "iva_importo": 1.14,
+        "totale": 5.30
+      },
+      {
+        "id_voce": "INDENNITA_FESTIVI",
+        "importo_lordo": 5.79,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -1.16,
+        "iva_percentuale": 22,
+        "iva_importo": 1.27,
+        "totale": 5.90
+      },
+      {
+        "id_voce": "INDENNITA_MALTEMPO",
+        "importo_lordo": 0.00,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": 0.00,
+        "iva_percentuale": 22,
+        "iva_importo": 0.00,
+        "totale": 0.00
+      },
+      {
+        "id_voce": "INDENNITA_NOTTURNI",
+        "importo_lordo": 0.00,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": 0.00,
+        "iva_percentuale": 22,
+        "iva_importo": 0.00,
+        "totale": 0.00
+      }
+    ],
+    "totali_modifiche_integrazioni": {
+      "importo_lordo": 23.29,
+      "ritenuta_percentuale": 20,
+      "ritenuta_importo": -4.66,
+      "iva_percentuale": 22,
+      "iva_importo": 5.12,
+      "totale": 23.75
+    },
+    "prospetto_finale": [
+      {
+        "id_voce": "PROSPETTO_ORDINI_CONSEGNATI",
+        "importo_lordo": 1718.00,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -343.60,
+        "iva_percentuale": 22,
+        "iva_importo": 377.96,
+        "totale": 1752.36
+      },
+      {
+        "id_voce": "PROSPETTO_MODIFICHE_INTEGRAZIONI",
+        "importo_lordo": 23.29,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -4.66,
+        "iva_percentuale": 22,
+        "iva_importo": 5.12,
+        "totale": 23.75
+      },
+      {
+        "id_voce": "PROSPETTO_MANCE",
+        "importo_lordo": 128.40,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -25.68,
+        "iva_percentuale": 22,
+        "iva_importo": 28.25,
+        "totale": 130.97
+      },
+      {
+        "id_voce": "PROSPETTO_TOTALE",
+        "importo_lordo": 1869.69,
+        "ritenuta_percentuale": 20,
+        "ritenuta_importo": -373.94,
+        "iva_percentuale": 22,
+        "iva_importo": 411.33,
+        "totale": 1907.08
+      },
+      {
+        "id_voce": "PROSPETTO_TRATTENUTA_SINDACALE",
+        "importo_lordo": -5.00,
+        "ritenuta_percentuale": null,
+        "ritenuta_importo": null,
+        "iva_percentuale": null,
+        "iva_importo": null,
+        "totale": -5.00
+      }
+    ],
+    "riepilogo": {
+      "imposta_bollo": null,
+      "percentuale_trattenute_fiscali": 20,
+      "importo_trattenute_fiscali": -373.94,
+      "percentuale_trattenute_previdenziali": null,
+      "importo_trattenute_previdenziali": null,
+      "pagamenti_contanti_gia_riscossi": -28.32,
+      "totale_dovuto": 1873.76
+    }
+  }
+]

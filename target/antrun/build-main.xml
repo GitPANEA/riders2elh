@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <echo message="==== AVVIO deploy JAR su host remoto 10.10.7.46 AT /opt/riderpay====" />
+    <scp trust="true" todir="f.cavaliere@10.10.7.46:/opt/riderpay" port="22" keyfile="C:\Sirfin Documents\ProdKey\riderpay_deploy_key" sftp="true" failonerror="true" verbose="true">
+      <fileset dir="C:\Svil\IntelliJ\Workspace\riderpay\target">
+        <include name="riderpay.jar" />
+      </fileset>
+    </scp>
+    <echo message="==== Deploy JAR completato ====" />
+  </target>
+</project>

@@ -1,9 +1,18 @@
 # Output di build Maven
 target/
 
-# IntelliJ: la configurazione condivisa (compiler.xml, encodings.xml,
-# jarRepositories.xml, misc.xml, vcs.xml) resta versionata; si escludono i file
-# per-utente, che cambiano a ogni sessione e non servono agli altri.
+# IntelliJ. Si versionano solo i file che NON sono derivabili dal pom.xml:
+#   encodings.xml -> encoding dei sorgenti, non desumibile da chi apre il progetto da zero
+#   vcs.xml       -> mappa la root al VCS, una riga
+# Tutto il resto è output dell'importer Maven di IDEA, che lo rigenera dal pom.xml
+# all'apertura: versionarlo serve solo a far divergere in silenzio la copia nel repo
+# (dopo il rename riderpay -> riders2eLH, compiler.xml si è ritrovato con entrambi i
+# moduli, uno dei quali inesistente). misc.xml conteneva anche project-jdk-name, che è
+# il nome locale della SDK e su un'altra macchina può differire.
+.idea/compiler.xml
+.idea/misc.xml
+.idea/jarRepositories.xml
+# File per-utente, cambiano a ogni sessione.
 .idea/workspace.xml
 .idea/shelf/
 .idea/httpRequests/

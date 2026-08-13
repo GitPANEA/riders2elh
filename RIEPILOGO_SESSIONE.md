@@ -25,7 +25,7 @@ Aggiunta un'implementazione **manuale leggera** (non Spring Authorization Server
 - Nuova tabella Oracle `T_CLIENT_OAUTH` (client_id, client_secret hash bcrypt, scope, TTL).
 - `TokenController` (`POST /oauth2/token`, grant_type=client_credentials, Basic Auth o form-urlencoded).
 - Refactor dei 4 controller: rimosso l'header libero `X-Client-Id`, sostituito con `SecurityUtils.clientIdAutenticato()` che legge il claim `sub` del JWT verificato.
-- Client di test registrato: `client_id=riderpay-test`, secret generato casualmente (salvato solo in Postman/appunti utente, hash bcrypt nel DDL).
+- Client di test registrato: `client_id=riders2elh-test`, secret generato casualmente (salvato solo in Postman/appunti utente, hash bcrypt nel DDL).
 - Collection Postman aggiornata: cartella "00 - Autenticazione" con script che salva `access_token` in variabile di collezione, Bearer token a livello di collezione, rimosso `X-Client-Id` da tutte le richieste.
 
 ## 5. Deploy su ambiente dev (replica schema di gpapi)
@@ -70,4 +70,4 @@ Analizzato il progetto `gpapi` (deploy manuale via `maven-antrun-plugin` + task 
 - Server dev: `10.10.7.46` (hostname `microservices-with-gui`), utente SSH `f.cavaliere`, chiave `C:\Sirfin Documents\ProdKey\riderpay_deploy_key`.
 - App in esecuzione su porta **9443**, systemd service `riderpay`, jar in `/opt/riderpay/riderpay.jar`, env file `/opt/riderpay/riderpay.env` (contiene `DB_PASSWORD`).
 - DB Oracle dev: `10.10.7.187:1521/SVILUPPO.testsub.prod.oraclevcn.com`, utente `CDL0036`.
-- Client OAuth di test: `client_id=riderpay-test`, secret in Postman (`clientSecret` variabile di collezione).
+- Client OAuth di test: `client_id=riders2elh-test`, secret in Postman (`clientSecret` variabile di collezione).

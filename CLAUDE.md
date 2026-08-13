@@ -45,11 +45,13 @@ journalctl -u riders2eLH -n 50 --no-pager
 | `key-alias: riderpay` (`application-local.yml`) | è l'alias inciso nel keystore PKCS12 alla generazione; cambiarlo senza rigenerare il keystore impedisce l'avvio |
 | `issuer: riderpay-auth-server` (`application.yml`) | finisce nel claim `iss` dei JWT emessi: è un valore di protocollo, da concordare con chi verifica i token |
 | `riderpay_deploy_key` (`remote.deploy.keyfile`) | file di chiave privata fuori dal repo, la cui pubblica è già in `authorized_keys` sul server |
-| `riderpay-test` / `api.riderpay` (`ddl_riderpay.sql`) | `client_id` e scope già inseriti in `T_CLIENT_OAUTH` in dev: sono dati, non codice — cambiarli richiede un `UPDATE` sul DB e la modifica dei client che li usano |
+| `api.riderpay` (`SCOPE_CONCESSI`) | lo scope non è verificato da nessuna parte (`SecurityConfig` richiede solo `.authenticated()`): rinominarlo richiederebbe anche un `ALTER TABLE ... MODIFY` del `DEFAULT` senza alcun effetto funzionale |
 
 **La directory del progetto resta `riderpay`** (punto 3 del rename, non affrontato): il path locale è ancora `C:\Svil\IntelliJ\Workspace\riderpay`, e non ha effetti sul build né sul deploy.
 
 La migrazione sul server è stata **completata il 13 agosto 2026**: `/opt/riders2eLH/` con env file e keystore rinominati, unit `riders2eLH.service` attiva, vecchio servizio `riderpay` fermato e rimosso. Verificata con emissione di un token su `POST /oauth2/token`.
+
+Anche il `client_id` di test è passato a `riders2elh-test` (13 agosto 2026), con un `UPDATE` su `T_CLIENT_OAUTH`; il secret e il suo hash bcrypt sono invariati, perché non dipendono dal `client_id`. **I batch storici in `T_BATCH_CARICAMENTO` conservano `CLIENT_ID = 'riderpay-test'`**: la colonna registra chi ha caricato quel batch nel momento in cui è avvenuto, e riscriverla contraddirebbe il modello append-only. Sono lo stesso client — vale la pena saperlo quando si interroga l'audit dei caricamenti fatti prima di quella data.
 
 ## Architettura
 

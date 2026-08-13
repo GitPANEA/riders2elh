@@ -256,7 +256,7 @@ CREATE UNIQUE INDEX UX_CLIENT_OAUTH_CLIENT_ID ON T_CLIENT_OAUTH (CLIENT_ID);
 -- Client di test per Postman. Secret in chiaro (solo per ambiente di sviluppo):
 -- -ovci-UPmmduwbc0nL3ta-lkzsZt9PhpUJ4TckxVp0E
 INSERT INTO T_CLIENT_OAUTH (CLIENT_ID, CLIENT_SECRET_HASH, DESCRIZIONE, SCOPE_CONCESSI)
-VALUES ('riderpay-test', '$2a$10$WovhDdfd7rxAnidg1ereTelEWu65tx5ZofukAK2KssSyrYsMyzTKG', 'Client di test per la collection Postman', 'api.riderpay');
+VALUES ('riders2elh-test', '$2a$10$WovhDdfd7rxAnidg1ereTelEWu65tx5ZofukAK2KssSyrYsMyzTKG', 'Client di test per la collection Postman', 'api.riderpay');
 
 --------------------------------------------------------------------------------
 -- 9. Permessi applicativi (esempio) — §11 "DELETE è sempre logico"

@@ -18,7 +18,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://10.10.7.46:9443",
+      "value": "https://devws.paneagroup.it:9443",
       "type": "string"
     },
     {
@@ -64,6 +64,16 @@
     {
       "key": "idBatchMovimentazione",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dataInizio",
+      "value": "2026-08-13",
+      "type": "string"
+    },
+    {
+      "key": "dataFine",
+      "value": "2026-08-15",
       "type": "string"
     }
   ],
@@ -919,7 +929,277 @@
           ]
         },
         {
-          "name": "04. DELETE /batch/{idBatch} - annullamento in blocco (§9.3)",
+          "name": "04. GET /batch?dataInizio&dataFine (intervallo di giorni)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?dataInizio={{dataInizio}}&dataFine={{dataFine}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "dataInizio",
+                  "value": "{{dataInizio}}"
+                },
+                {
+                  "key": "dataFine",
+                  "value": "{{dataFine}}"
+                }
+              ]
+            },
+            "description": "Batch ricevuti nell'intervallo di giorni indicato, ESTREMI INCLUSI, confrontati su DT_RICEZIONE.\n\nLe date si indicano senza orario (yyyy-MM-dd): il filtro seleziona internamente l'intervallo [dataInizio 00:00, dataFine+1giorno 00:00), quindi tutto il giorno dataFine e' compreso.\n\nNessuna conversione di fuso orario: il giorno di ricerca e' il giorno come sta scritto in DT_RICEZIONE. Se la JVM del server non e' in Europe/Rome, un batch ricevuto poco dopo la mezzanotte italiana risulta archiviato nel giorno precedente.\n\nNessuna corrispondenza -> 200 con lista vuota (non 404)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Risposta e un array', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "pm.test('Ogni DT_RICEZIONE cade nell intervallo richiesto, estremi inclusi', function () {",
+                  "    const da = pm.collectionVariables.get('dataInizio');",
+                  "    const a  = pm.collectionVariables.get('dataFine');",
+                  "    pm.response.json().forEach(function (b) {",
+                  "        const giorno = b.dtRicezione.substring(0, 10);",
+                  "        pm.expect(giorno >= da && giorno <= a, 'dtRicezione ' + b.dtRicezione).to.be.true;",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05. GET /batch?tipoOperazione&dataInizio&dataFine (filtri combinati)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?tipoOperazione=ANNULLAMENTO&dataInizio={{dataInizio}}&dataFine={{dataFine}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "tipoOperazione",
+                  "value": "ANNULLAMENTO"
+                },
+                {
+                  "key": "dataInizio",
+                  "value": "{{dataInizio}}"
+                },
+                {
+                  "key": "dataFine",
+                  "value": "{{dataFine}}"
+                }
+              ]
+            },
+            "description": "I filtri sono opzionali e combinabili: qui annullamenti ristretti all'intervallo di giorni. Combinazioni possibili: nessun filtro (tutti i batch), solo tipoOperazione, solo le date, entrambi."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Solo ANNULLAMENTO nel risultato', function () {",
+                  "    pm.response.json().forEach(function (b) {",
+                  "        pm.expect(b.tipoOperazione).to.eql('ANNULLAMENTO');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06. GET /batch?tipoOperazione=annullamento (minuscolo: accettato)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?tipoOperazione=annullamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "tipoOperazione",
+                  "value": "annullamento"
+                }
+              ]
+            },
+            "description": "tipoOperazione e' case-insensitive: 'annullamento', 'ANNULLAMENTO' e 'Annullamento' sono equivalenti (trim + toUpperCase lato server). Eventuali spazi accidentali vengono ignorati."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Il minuscolo filtra come il maiuscolo', function () {",
+                  "    pm.response.json().forEach(function (b) {",
+                  "        pm.expect(b.tipoOperazione).to.eql('ANNULLAMENTO');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07. GET /batch?tipoOperazione=PIPPO -> 400 (valore non ammesso)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?tipoOperazione=PIPPO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "tipoOperazione",
+                  "value": "PIPPO"
+                }
+              ]
+            },
+            "description": "Valore non riconosciuto: 400 con l'elenco dei valori ammessi nel campo 'errore'.\n\nPrima che il parametro fosse gestito come String lato server, un valore errato produceva un 500 opaco."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Il messaggio elenca i valori ammessi', function () {",
+                  "    const errore = pm.response.json().errore;",
+                  "    pm.expect(errore).to.include('CARICAMENTO');",
+                  "    pm.expect(errore).to.include('RETTIFICA');",
+                  "    pm.expect(errore).to.include('ANNULLAMENTO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08. GET /batch?dataInizio (una sola data) -> 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?dataInizio={{dataInizio}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "dataInizio",
+                  "value": "{{dataInizio}}"
+                }
+              ]
+            },
+            "description": "Le due date vanno specificate entrambe oppure nessuna: una sola sarebbe un intervallo aperto, che non e' la semantica dell'endpoint. 400 esplicito invece di una lista silenziosamente diversa da quella attesa."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Il messaggio cita entrambi i parametri', function () {",
+                  "    const errore = pm.response.json().errore;",
+                  "    pm.expect(errore).to.include('dataInizio');",
+                  "    pm.expect(errore).to.include('dataFine');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09. GET /batch?dataInizio>dataFine -> 400 (intervallo invertito)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?dataInizio=2026-08-15&dataFine=2026-08-13",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "dataInizio",
+                  "value": "2026-08-15"
+                },
+                {
+                  "key": "dataFine",
+                  "value": "2026-08-13"
+                }
+              ]
+            },
+            "description": "Intervallo invertito: 400. Senza il controllo, il SQL restituirebbe una lista vuota senza segnalare l'errore del chiamante."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. DELETE /batch/{idBatch} - annullamento in blocco (§9.3)",
           "request": {
             "method": "DELETE",
             "header": [

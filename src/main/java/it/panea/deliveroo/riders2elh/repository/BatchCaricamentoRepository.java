@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,14 +67,44 @@ public class BatchCaricamentoRepository {
                 .stream().findFirst();
     }
 
-    /** GET /api/v1/batch?tipoOperazione=... — null = nessun filtro. */
-    public List<BatchRow> elenca(TipoOperazione tipoOperazione) {
-        if (tipoOperazione == null) {
-            return jdbcTemplate.query("SELECT * FROM T_BATCH_CARICAMENTO ORDER BY DT_RICEZIONE DESC", MAPPER);
+    /**
+     * GET /api/v1/batch?tipoOperazione=...&amp;dataInizio=...&amp;dataFine=... — ogni filtro è
+     * opzionale (null = non applicato) e i filtri sono combinabili tra loro.
+     * <p>
+     * Il filtro per data seleziona l'intervallo semiaperto
+     * {@code [dataInizio 00:00:00, dataFine+1giorno 00:00:00)}: il {@code <} stretto
+     * sull'estremo superiore, unito al giorno aggiunto, include tutto il giorno
+     * {@code dataFine} fino a {@code 23:59:59.999...} — quindi <b>entrambi gli estremi
+     * dell'intervallo di giorni sono inclusi</b>. È l'equivalente di
+     * {@code TRUNC(DT_RICEZIONE) BETWEEN TRUNC(dataInizio) AND TRUNC(dataFine)}, scritto in
+     * modo da restare sargable: una funzione sulla colonna ({@code TRUNC(DT_RICEZIONE)})
+     * impedirebbe l'uso di un eventuale indice su {@code DT_RICEZIONE}, che oggi non esiste
+     * ma su un range scan è esattamente il caso in cui servirebbe.
+     * <p>
+     * <b>Nessuna conversione di fuso orario</b>: gli estremi sono costruiti da
+     * {@link LocalDate} così come arrivano e confrontati con {@code DT_RICEZIONE}, che è un
+     * {@code TIMESTAMP} Oracle senza fuso. Il giorno di ricerca è quindi il giorno come sta
+     * scritto nella colonna — scelta esplicita (13 agosto 2026), perché {@code DT_RICEZIONE}
+     * è considerata il valore autoritativo. Se la JVM del server non è in {@code Europe/Rome},
+     * un batch ricevuto poco dopo la mezzanotte italiana risulta archiviato nel giorno
+     * precedente, e va cercato in quel giorno.
+     */
+    public List<BatchRow> elenca(TipoOperazione tipoOperazione, LocalDate dataInizio, LocalDate dataFine) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM T_BATCH_CARICAMENTO");
+        List<Object> parametri = new ArrayList<>();
+
+        if (tipoOperazione != null) {
+            parametri.add(tipoOperazione.name());
+            sql.append(parametri.size() == 1 ? " WHERE" : " AND").append(" TIPO_OPERAZIONE = ?");
         }
-        return jdbcTemplate.query(
-                "SELECT * FROM T_BATCH_CARICAMENTO WHERE TIPO_OPERAZIONE = ? ORDER BY DT_RICEZIONE DESC",
-                MAPPER, tipoOperazione.name());
+        if (dataInizio != null && dataFine != null) {
+            sql.append(parametri.isEmpty() ? " WHERE" : " AND").append(" DT_RICEZIONE >= ? AND DT_RICEZIONE < ?");
+            parametri.add(Timestamp.valueOf(dataInizio.atStartOfDay()));
+            parametri.add(Timestamp.valueOf(dataFine.plusDays(1).atStartOfDay()));
+        }
+
+        sql.append(" ORDER BY DT_RICEZIONE DESC");
+        return jdbcTemplate.query(sql.toString(), MAPPER, parametri.toArray());
     }
 
     /**

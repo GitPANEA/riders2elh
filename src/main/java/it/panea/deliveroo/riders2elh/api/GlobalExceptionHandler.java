@@ -2,6 +2,7 @@ package it.panea.deliveroo.riders2elh.api;
 
 import it.panea.deliveroo.riders2elh.common.ClientNonAutorizzatoException;
 import it.panea.deliveroo.riders2elh.common.ConflittoConcorrenzaException;
+import it.panea.deliveroo.riders2elh.common.RichiestaNonValidaException;
 import it.panea.deliveroo.riders2elh.common.RisorsaNonTrovataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ClientNonAutorizzatoException.class)
     public ResponseEntity<Map<String, Object>> gestisciClientNonAutorizzato(ClientNonAutorizzatoException e) {
         return errore(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    /** Parametri di richiesta incoerenti tra loro (es. dataInizio successiva a dataFine). */
+    @ExceptionHandler(RichiestaNonValidaException.class)
+    public ResponseEntity<Map<String, Object>> gestisciRichiestaNonValida(RichiestaNonValidaException e) {
+        return errore(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

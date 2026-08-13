@@ -1,7 +1,0 @@
-package it.panea.deliveroo.riderpay.dto;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
-public record RettificaMovimentazioneRequest(@NotNull @Valid MovimentazioneDto dati, @NotBlank String motivo) {}

@@ -38,15 +38,18 @@ journalctl -u riders2eLH -n 50 --no-pager
 
 `deploy/README.md` contiene i comandi di setup una tantum sul server (directory, `EnvironmentFile`, unit systemd, generazione del keystore TLS). L'host di deploy è definito in `remote.deploy.host` nel `pom.xml` — quella resta la fonte autorevole in caso di dubbio.
 
-**Rename `riderpay` → `riders2eLH` (13 agosto 2026), fatto solo a livello di build/deploy.** Sono cambiati `artifactId`/`name`/`finalName` nel `pom.xml`, il nome del jar, la unit systemd, `/opt/riders2eLH/` e il prefisso di configurazione `riders2eLH.security.jwt.*`. Tre nomi restano volutamente al vecchio valore, perché non sono etichette ma riferimenti a cose che esistono già fuori dal repo:
+**Rename `riderpay` → `riders2eLH` (13 agosto 2026).** Sono cambiati `artifactId`/`name`/`finalName` nel `pom.xml`, il nome del jar, la unit systemd, `/opt/riders2eLH/`, il prefisso di configurazione `riders2eLH.security.jwt.*`, il package Java (`it.panea.deliveroo.riders2elh`, minuscolo per convenzione) e la classe main (`Riders2eLHApplication`). Tre nomi restano volutamente al vecchio valore, perché non sono etichette ma riferimenti a cose che esistono già fuori dal repo:
 
 | Cosa | Perché non è stato rinominato |
 |---|---|
 | `key-alias: riderpay` (`application-local.yml`) | è l'alias inciso nel keystore PKCS12 alla generazione; cambiarlo senza rigenerare il keystore impedisce l'avvio |
 | `issuer: riderpay-auth-server` (`application.yml`) | finisce nel claim `iss` dei JWT emessi: è un valore di protocollo, da concordare con chi verifica i token |
 | `riderpay_deploy_key` (`remote.deploy.keyfile`) | file di chiave privata fuori dal repo, la cui pubblica è già in `authorized_keys` sul server |
+| `riderpay-test` / `api.riderpay` (`ddl_riderpay.sql`) | `client_id` e scope già inseriti in `T_CLIENT_OAUTH` in dev: sono dati, non codice — cambiarli richiede un `UPDATE` sul DB e la modifica dei client che li usano |
 
-Il package Java resta `it.panea.deliveroo.riderpay` e la directory del progetto resta `riderpay`: sono i punti 2 e 3 del rename, non ancora affrontati. **Sul server la migrazione va eseguita a mano** (sezione dedicata in `deploy/README.md`): finché non è fatta, `mvn deploy` scrive in `/opt/riders2eLH/` mentre systemd serve ancora il vecchio jar da `/opt/riderpay/` — nessun errore, ma le modifiche non compaiono.
+**La directory del progetto resta `riderpay`** (punto 3 del rename, non affrontato): il path locale è ancora `C:\Svil\IntelliJ\Workspace\riderpay`, e non ha effetti sul build né sul deploy.
+
+La migrazione sul server è stata **completata il 13 agosto 2026**: `/opt/riders2eLH/` con env file e keystore rinominati, unit `riders2eLH.service` attiva, vecchio servizio `riderpay` fermato e rimosso. Verificata con emissione di un token su `POST /oauth2/token`.
 
 ## Architettura
 
@@ -92,8 +95,8 @@ Occorso e risolto in dev il 12 agosto 2026 (`T_RIDER_ANAGRAFICA_ST`, partizione 
 ### Struttura dei package
 
 ```
-it.panea.deliveroo.riderpay/
-├─ RiderPayApplication.java
+it.panea.deliveroo.riders2elh/
+├─ Riders2eLHApplication.java
 ├─ common/            → enum di dominio, eccezioni custom, ChecksumUtils, SecurityUtils, DiagnosticaErrori
 ├─ dto/                → record REST (payload 1:1 con anagrafica.json/voci.csv/movimentazioni.json)
 ├─ repository/         → accesso Oracle via JdbcTemplate/SimpleJdbcInsert (no JPA/Hibernate)

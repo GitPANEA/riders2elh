@@ -1,0 +1,17 @@
+# Output di build Maven
+target/
+
+# IntelliJ: la configurazione condivisa (compiler.xml, encodings.xml,
+# jarRepositories.xml, misc.xml, vcs.xml) resta versionata; si escludono i file
+# per-utente, che cambiano a ogni sessione e non servono agli altri.
+.idea/workspace.xml
+.idea/shelf/
+.idea/httpRequests/
+*.iml
+
+# Segreti e materiale di deploy: non devono mai finire nel repo.
+# Le password reali stanno nell'EnvironmentFile sul server (vedi deploy/README.md).
+*.p12
+*.jks
+*_deploy_key
+*.pem

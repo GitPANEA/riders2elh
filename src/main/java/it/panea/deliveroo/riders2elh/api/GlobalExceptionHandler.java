@@ -3,6 +3,8 @@ package it.panea.deliveroo.riders2elh.api;
 import it.panea.deliveroo.riders2elh.common.ClientNonAutorizzatoException;
 import it.panea.deliveroo.riders2elh.common.ConflittoConcorrenzaException;
 import it.panea.deliveroo.riders2elh.common.RisorsaNonTrovataException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(RisorsaNonTrovataException.class)
     public ResponseEntity<Map<String, Object>> gestisciNonTrovata(RisorsaNonTrovataException e) {
@@ -74,6 +78,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ResponseEntity<Map<String, Object>> gestisciParteMancante(MissingServletRequestPartException e) {
         return errore(HttpStatus.BAD_REQUEST, "Parte multipart mancante: " + e.getRequestPartName());
+    }
+
+    /**
+     * Rete di sicurezza per ogni eccezione non prevista dagli handler sopra. Senza di essa
+     * l'eccezione risale la filter chain di Spring Security, che la traduce in
+     * {@code 403 WWW-Authenticate: insufficient_scope}: un errore interno si presenta al
+     * client come problema di autorizzazione, mandando a cercare la causa nel token o negli
+     * scope invece che nel codice. Con questo handler un bug applicativo risponde 500, e la
+     * causa reale resta nel log lato server.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> gestisciNonPrevista(Exception e) {
+        log.error("Errore non gestito durante l'elaborazione della richiesta", e);
+        return errore(HttpStatus.INTERNAL_SERVER_ERROR, "Errore interno del server");
     }
 
     private ResponseEntity<Map<String, Object>> errore(HttpStatus status, String messaggio) {

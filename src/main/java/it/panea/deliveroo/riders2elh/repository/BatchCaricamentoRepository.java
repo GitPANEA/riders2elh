@@ -75,19 +75,28 @@ public class BatchCaricamentoRepository {
                 MAPPER, tipoOperazione.name());
     }
 
+    /**
+     * Le colonne numeriche usano {@code getObject(nome, Classe)} e non un cast su
+     * {@code getObject(nome)}: il driver Oracle restituisce {@code NUMBER} come
+     * {@link java.math.BigDecimal}, quindi {@code (Integer) rs.getObject(...)} solleva
+     * {@link ClassCastException}. Il difetto resta latente sui batch ancora aperti (colonne
+     * NULL, il cast passa) e si manifesta solo leggendo un batch chiuso, con i contatori
+     * valorizzati. Non si usa {@code getInt}/{@code getLong} perché restituiscono 0 sui NULL,
+     * falsando i contatori e {@code ID_BATCH_RIFERIMENTO}.
+     */
     private static final RowMapper<BatchRow> MAPPER = (rs, rowNum) -> new BatchRow(
             rs.getLong("ID_BATCH"),
             TipoEntita.valueOf(rs.getString("TIPO_ENTITA")),
             TipoOperazione.valueOf(rs.getString("TIPO_OPERAZIONE")),
-            (Long) rs.getObject("ID_BATCH_RIFERIMENTO"),
+            rs.getObject("ID_BATCH_RIFERIMENTO", Long.class),
             rs.getString("MOTIVO_OPERAZIONE"),
             rs.getString("NOME_FILE_ORIGINE"),
             rs.getString("CLIENT_ID"),
             rs.getTimestamp("DT_RICEZIONE").toInstant(),
             rs.getTimestamp("DT_FINE_ELABORAZIONE") != null ? rs.getTimestamp("DT_FINE_ELABORAZIONE").toInstant() : null,
             rs.getString("ESITO") != null ? EsitoBatch.valueOf(rs.getString("ESITO")) : null,
-            (Integer) rs.getObject("NUM_RECORD_TOTALI"),
-            (Integer) rs.getObject("NUM_RECORD_OK"),
-            (Integer) rs.getObject("NUM_RECORD_KO")
+            rs.getObject("NUM_RECORD_TOTALI", Integer.class),
+            rs.getObject("NUM_RECORD_OK", Integer.class),
+            rs.getObject("NUM_RECORD_KO", Integer.class)
     );
 }

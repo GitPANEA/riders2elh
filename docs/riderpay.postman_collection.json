@@ -1,0 +1,970 @@
+{
+  "info": {
+    "_postman_id": "78ebf30b-858f-4867-9c1c-89aada2b203d",
+    "name": "RiderPay - API Deliveroo (ingestione + annullamento/rettifica)",
+    "description": "Collezione di test per le API descritte in progettazione_ingestion_oracle.md (§9, §9.3, §15). Import in Postman, impostare le variabili di collezione (baseUrl, clientId, clientSecret) ed eseguire prima '00 - Autenticazione' per ottenere l'accessToken; poi usare le cartelle in ordine: 01 Anagrafica, 02 Voci, 03 Movimentazioni, 04 Batch.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://10.10.7.46:9443",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "riderpay-test",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "-ovci-UPmmduwbc0nL3ta-lkzsZt9PhpUJ4TckxVp0E",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idRider",
+      "value": "b9ddabec",
+      "type": "string"
+    },
+    {
+      "key": "idVoce",
+      "value": "INDENNITA_FESTIVI",
+      "type": "string"
+    },
+    {
+      "key": "idMovimentazione",
+      "value": "ri_it_b9ddabec-f763-4152-9c80-de0187b95259_56",
+      "type": "string"
+    },
+    {
+      "key": "idBatch",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idBatchAnagrafica",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idBatchMovimentazione",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Autenticazione",
+      "item": [
+        {
+          "name": "01. POST /oauth2/token - client_credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', body.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{clientSecret}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/oauth2/token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "oauth2",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Anagrafica",
+      "item": [
+        {
+          "name": "01. POST /anagrafiche - carica anagrafica.json",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/anagrafiche",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "anagrafiche"
+              ]
+            },
+            "description": "Ingestione dell'intero file anagrafica.json (§9). Salva id_batch in {{idBatchAnagrafica}} per riuso.",
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id_rider\": \"b9ddabec\",\n    \"regime_fiscale\": \"PRESTAZIONE_OCCASIONALE\",\n    \"data_inizio\": \"2025-01-15\",\n    \"data_fine\": \"2026-12-31\",\n    \"nome\": \"Mario\",\n    \"cognome\": \"Rossi\",\n    \"codice_fiscale\": \"RSSMRA80A01F205X\",\n    \"telefono_cellulare\": \"+393201000001\",\n    \"email\": \"mario.rossi@example.com\",\n    \"indirizzo_residenza\": \"Via Roma 10\",\n    \"codice_istat_residenza\": \"015146\",\n    \"comune_residenza\": \"Milano\",\n    \"provincia_residenza\": \"MI\",\n    \"cap_residenza\": \"20121\"\n  },\n  {\n    \"id_rider\": \"ffb17cde\",\n    \"regime_fiscale\": \"REGIME_FORFETTARIO\",\n    \"data_inizio\": \"2024-09-01\",\n    \"data_fine\": \"2026-12-31\",\n    \"nome\": \"Giulia\",\n    \"cognome\": \"Bianchi\",\n    \"codice_fiscale\": \"BNCGLI85B41F205J\",\n    \"partita_iva\": \"12345678903\",\n    \"telefono_cellulare\": \"+393201000002\",\n    \"email\": \"giulia.bianchi@example.com\",\n    \"indirizzo_residenza\": \"Corso Italia 25\",\n    \"codice_istat_residenza\": \"015146\",\n    \"comune_residenza\": \"Milano\",\n    \"provincia_residenza\": \"MI\",\n    \"cap_residenza\": \"20122\"\n  },\n  {\n    \"id_rider\": \"ffcd0974\",\n    \"regime_fiscale\": \"REGIME_FORFETTARIO\",\n    \"data_inizio\": \"2026-02-10\",\n    \"data_fine\": \"2026-12-31\",\n    \"nome\": \"Luca\",\n    \"cognome\": \"Verdi\",\n    \"codice_fiscale\": \"VRDLCU90C15F205D\",\n    \"partita_iva\": \"10987654323\",\n    \"telefono_cellulare\": \"+393201000003\",\n    \"email\": \"luca.verdi@example.com\",\n    \"indirizzo_residenza\": \"Via Verdi 8\",\n    \"codice_istat_residenza\": \"015146\",\n    \"comune_residenza\": \"Milano\",\n    \"provincia_residenza\": \"MI\",\n    \"cap_residenza\": \"20123\"\n  },\n  {\n    \"id_rider\": \"f1ca91d2\",\n    \"regime_fiscale\": \"REGIME_ORDINARIO\",\n    \"data_inizio\": \"2024-04-01\",\n    \"data_fine\": \"2026-12-31\",\n    \"nome\": \"Anna\",\n    \"cognome\": \"Neri\",\n    \"codice_fiscale\": \"NRENNA88D41F205K\",\n    \"partita_iva\": \"11223344554\",\n    \"telefono_cellulare\": \"+393201000004\",\n    \"email\": \"anna.neri@example.com\",\n    \"indirizzo_residenza\": \"Via Torino 15\",\n    \"codice_istat_residenza\": \"015146\",\n    \"comune_residenza\": \"Milano\",\n    \"provincia_residenza\": \"MI\",\n    \"cap_residenza\": \"20124\"\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 o 207', function () {",
+                  "    pm.expect([201, 207]).to.include(pm.response.code);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('idBatchAnagrafica', json.idBatch);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02. GET /rider/{idRider}/anagrafica - stato corrente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rider/{{idRider}}/anagrafica",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rider",
+                "{{idRider}}",
+                "anagrafica"
+              ]
+            },
+            "description": "Restituisce la versione attualmente valida (§9). Eseguire dopo la 01."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03. GET /rider/{idRider}/anagrafica?storico=true",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rider/{{idRider}}/anagrafica?storico=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rider",
+                "{{idRider}}",
+                "anagrafica"
+              ],
+              "query": [
+                {
+                  "key": "storico",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Restituisce tutte le versioni ricevute nel tempo per questo rider (§9)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04. DELETE /rider/{idRider}/anagrafica - annullamento (§9.3)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rider/{{idRider}}/anagrafica",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rider",
+                "{{idRider}}",
+                "anagrafica"
+              ]
+            },
+            "description": "Annullamento logico della versione corrente. ATTENZIONE: dopo questa chiamata non esiste più una versione corrente da rettificare con la 05 finché non si ricarica con la 01 - eseguire come alternativa, non in sequenza.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Anagrafica caricata per il rider sbagliato, da annullare\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05. POST /rider/{idRider}/anagrafica/rettifica (§9.3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rider/{{idRider}}/anagrafica/rettifica",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rider",
+                "{{idRider}}",
+                "anagrafica",
+                "rettifica"
+              ]
+            },
+            "description": "Invia dati anagrafici corretti per la versione corrente. Richiede che esista ancora una versione corrente (non eseguire dopo la 04 sullo stesso rider senza aver prima rieseguito la 01).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dati\": {\n    \"id_rider\": \"b9ddabec\",\n    \"regime_fiscale\": \"PRESTAZIONE_OCCASIONALE\",\n    \"data_inizio\": \"2025-01-15\",\n    \"data_fine\": \"2026-12-31\",\n    \"nome\": \"Mario\",\n    \"cognome\": \"Rossi\",\n    \"codice_fiscale\": \"RSSMRA80A01F205X\",\n    \"telefono_cellulare\": \"+393201000001\",\n    \"email\": \"mario.rossi@example.com\",\n    \"indirizzo_residenza\": \"Via Roma 12 (corretto)\",\n    \"codice_istat_residenza\": \"015146\",\n    \"comune_residenza\": \"Milano\",\n    \"provincia_residenza\": \"MI\",\n    \"cap_residenza\": \"20121\"\n  },\n  \"motivo\": \"Indirizzo di residenza errato nel file originale\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 - Voci",
+      "item": [
+        {
+          "name": "01. POST /voci - carica voci.csv (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/voci",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "voci"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "voci.csv"
+                }
+              ]
+            },
+            "description": "Ingestione di voci.csv (§9). In Postman selezionare manualmente il file locale examples_V0.4/voci.csv nel campo 'file' (il collection export non incorpora binari)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 o 207', function () {",
+                  "    pm.expect([201, 207]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "02. GET /voci - elenco correnti",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/voci",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "voci"
+              ]
+            },
+            "description": "Elenco di tutte le voci attualmente attive (§9)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03. GET /voci/{idVoce}/storico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/voci/{{idVoce}}/storico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "voci",
+                "{{idVoce}}",
+                "storico"
+              ]
+            },
+            "description": "Storico completo di una voce specifica."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04. DELETE /voci/{idVoce} - annullamento (§9.3)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/voci/{{idVoce}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "voci",
+                "{{idVoce}}"
+              ]
+            },
+            "description": "Annullamento logico della voce corrente. Alternativa alla 05, non in sequenza sulla stessa voce.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Voce duplicata per errore di import dal CSV\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05. POST /voci/{idVoce}/rettifica (§9.3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/voci/{{idVoce}}/rettifica",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "voci",
+                "{{idVoce}}",
+                "rettifica"
+              ]
+            },
+            "description": "Invia una descrizione corretta per la voce (richiede una versione corrente attiva).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dati\": {\n    \"id_voce\": \"INDENNITA_FESTIVI\",\n    \"descrizione\": \"Indennità Festivi (corretto)\",\n    \"mese_riferimento_richiesto\": false\n  },\n  \"motivo\": \"Descrizione con refuso nel file originale\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 - Movimentazioni",
+      "item": [
+        {
+          "name": "01. POST /movimentazioni - carica movimentazioni.json",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movimentazioni",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movimentazioni"
+              ]
+            },
+            "description": "Ingestione di movimentazioni.json (§9) - qui limitato a 1 record di esempio (il file reale ne contiene di più) per mantenere la request leggibile. Salva id_batch in {{idBatchMovimentazione}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"id_movimentazione\": \"ri_it_b9ddabec-f763-4152-9c80-de0187b95259_56\",\n    \"id_rider\": \"b9ddabec\",\n    \"periodo_da\": \"2026-06-01\",\n    \"periodo_a\": \"2026-06-30\",\n    \"consegne\": [\n      {\n        \"data\": \"2026-06-01\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 35.21\n      },\n      {\n        \"data\": \"2026-06-02\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 40.25\n      },\n      {\n        \"data\": \"2026-06-07\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 20.60\n      },\n      {\n        \"data\": \"2026-06-08\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 33.44\n      },\n      {\n        \"data\": \"2026-06-09\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 30.74\n      },\n      {\n        \"data\": \"2026-06-14\",\n        \"numero_consegne\": 3,\n        \"totale_parziale_lordo\": 13.60\n      },\n      {\n        \"data\": \"2026-06-15\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 59.96\n      },\n      {\n        \"data\": \"2026-06-16\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 45.21\n      },\n      {\n        \"data\": \"2026-06-21\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 23.81\n      },\n      {\n        \"data\": \"2026-06-22\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 41.79\n      },\n      {\n        \"data\": \"2026-06-23\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 31.41\n      },\n      {\n        \"data\": \"2026-06-29\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 37.57\n      },\n      {\n        \"data\": \"2026-06-30\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 34.32\n      }\n    ],\n    \"totali_consegne\": {\n      \"numero_consegne\": 79,\n      \"totale_parziale_lordo\": 447.91\n    },\n    \"modifiche_integrazioni\": [\n      {\n        \"id_voce\": \"INDENNITA_FESTIVI\",\n        \"importo_lordo\": 3.27,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -0.65,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 2.62\n      },\n      {\n        \"id_voce\": \"INDENNITA_MALTEMPO\",\n        \"importo_lordo\": 1.78,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -0.36,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 1.42\n      }\n    ],\n    \"totali_modifiche_integrazioni\": {\n      \"importo_lordo\": 5.05,\n      \"ritenuta_percentuale\": 20,\n      \"ritenuta_importo\": -1.01,\n      \"iva_percentuale\": null,\n      \"iva_importo\": null,\n      \"totale\": 4.04\n    },\n    \"prospetto_finale\": [\n      {\n        \"id_voce\": \"PROSPETTO_ORDINI_CONSEGNATI\",\n        \"importo_lordo\": 447.91,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -89.58,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 358.33\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MODIFICHE_INTEGRAZIONI\",\n        \"importo_lordo\": 5.05,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.01,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 4.04\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MANCE\",\n        \"importo_lordo\": 9.00,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.80,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 7.20\n      },\n      {\n        \"id_voce\": \"PROSPETTO_TOTALE\",\n        \"importo_lordo\": 461.96,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -92.39,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 369.57\n      }\n    ],\n    \"riepilogo\": {\n      \"imposta_bollo\": -2.00,\n      \"percentuale_trattenute_fiscali\": 20,\n      \"importo_trattenute_fiscali\": -92.39,\n      \"percentuale_trattenute_previdenziali\": null,\n      \"importo_trattenute_previdenziali\": null,\n      \"pagamenti_contanti_gia_riscossi\": null,\n      \"totale_dovuto\": 367.57\n    }\n  },\n  {\n    \"id_movimentazione\": \"ri_it_ffb17cde-2f27-492f-b2bc-42922c70b691_10\",\n    \"id_rider\": \"ffb17cde\",\n    \"periodo_da\": \"2026-06-01\",\n    \"periodo_a\": \"2026-06-30\",\n    \"consegne\": [\n      {\n        \"data\": \"2026-06-01\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 76.69\n      },\n      {\n        \"data\": \"2026-06-02\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 79.87\n      },\n      {\n        \"data\": \"2026-06-03\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 53.74\n      },\n      {\n        \"data\": \"2026-06-04\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 43.19\n      },\n      {\n        \"data\": \"2026-06-05\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 60.31\n      },\n      {\n        \"data\": \"2026-06-06\",\n        \"numero_consegne\": 15,\n        \"totale_parziale_lordo\": 95.29\n      },\n      {\n        \"data\": \"2026-06-07\",\n        \"numero_consegne\": 13,\n        \"totale_parziale_lordo\": 92.75\n      },\n      {\n        \"data\": \"2026-06-08\",\n        \"numero_consegne\": 14,\n        \"totale_parziale_lordo\": 89.15\n      },\n      {\n        \"data\": \"2026-06-09\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 62.76\n      },\n      {\n        \"data\": \"2026-06-10\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 43.29\n      },\n      {\n        \"data\": \"2026-06-11\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 64.35\n      },\n      {\n        \"data\": \"2026-06-12\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 59.31\n      },\n      {\n        \"data\": \"2026-06-13\",\n        \"numero_consegne\": 13,\n        \"totale_parziale_lordo\": 85.82\n      },\n      {\n        \"data\": \"2026-06-14\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 69.09\n      },\n      {\n        \"data\": \"2026-06-15\",\n        \"numero_consegne\": 17,\n        \"totale_parziale_lordo\": 120.01\n      },\n      {\n        \"data\": \"2026-06-16\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 73.47\n      },\n      {\n        \"data\": \"2026-06-17\",\n        \"numero_consegne\": 14,\n        \"totale_parziale_lordo\": 92.97\n      },\n      {\n        \"data\": \"2026-06-18\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 74.64\n      },\n      {\n        \"data\": \"2026-06-19\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 94.48\n      },\n      {\n        \"data\": \"2026-06-20\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 91.26\n      },\n      {\n        \"data\": \"2026-06-21\",\n        \"numero_consegne\": 9,\n        \"totale_parziale_lordo\": 60.08\n      },\n      {\n        \"data\": \"2026-06-22\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 63.28\n      },\n      {\n        \"data\": \"2026-06-23\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 74.47\n      },\n      {\n        \"data\": \"2026-06-24\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 29.93\n      },\n      {\n        \"data\": \"2026-06-26\",\n        \"numero_consegne\": 9,\n        \"totale_parziale_lordo\": 42.79\n      },\n      {\n        \"data\": \"2026-06-27\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 23.95\n      },\n      {\n        \"data\": \"2026-06-28\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 38.64\n      },\n      {\n        \"data\": \"2026-06-29\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 51.08\n      },\n      {\n        \"data\": \"2026-06-30\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 50.63\n      }\n    ],\n    \"totali_consegne\": {\n      \"numero_consegne\": 300,\n      \"totale_parziale_lordo\": 1957.29\n    },\n    \"modifiche_integrazioni\": [\n      {\n        \"id_voce\": \"BONUS_CCNL_4000_CONSEGNE\",\n        \"importo_lordo\": 600.00,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 600.00\n      },\n      {\n        \"id_voce\": \"INDENNITA_NOTTURNI\",\n        \"importo_lordo\": 0.00,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 0.00\n      },\n      {\n        \"id_voce\": \"INDENNITA_FESTIVI\",\n        \"importo_lordo\": 20.65,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 20.65\n      },\n      {\n        \"id_voce\": \"INDENNITA_MALTEMPO\",\n        \"importo_lordo\": 2.17,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 2.17\n      }\n    ],\n    \"totali_modifiche_integrazioni\": {\n      \"importo_lordo\": 622.82,\n      \"ritenuta_percentuale\": null,\n      \"ritenuta_importo\": null,\n      \"iva_percentuale\": 0,\n      \"iva_importo\": 0.00,\n      \"totale\": 622.82\n    },\n    \"prospetto_finale\": [\n      {\n        \"id_voce\": \"PROSPETTO_ORDINI_CONSEGNATI\",\n        \"importo_lordo\": 1957.29,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 1957.29\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MODIFICHE_INTEGRAZIONI\",\n        \"importo_lordo\": 622.82,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 622.82\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MANCE\",\n        \"importo_lordo\": 78.50,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 78.50\n      },\n      {\n        \"id_voce\": \"PROSPETTO_TOTALE\",\n        \"importo_lordo\": 2658.61,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 2658.61\n      }\n    ],\n    \"riepilogo\": {\n      \"imposta_bollo\": null,\n      \"percentuale_trattenute_fiscali\": null,\n      \"importo_trattenute_fiscali\": null,\n      \"percentuale_trattenute_previdenziali\": null,\n      \"importo_trattenute_previdenziali\": null,\n      \"pagamenti_contanti_gia_riscossi\": -31.28,\n      \"totale_dovuto\": 2627.33\n    }\n  },\n  {\n    \"id_movimentazione\": \"ri_it_ffcd0974-3e6a-434b-82b7-ddd2393f2574_15\",\n    \"id_rider\": \"ffcd0974\",\n    \"periodo_da\": \"2026-06-01\",\n    \"periodo_a\": \"2026-06-30\",\n    \"consegne\": [\n      {\n        \"data\": \"2026-06-01\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 27.84\n      },\n      {\n        \"data\": \"2026-06-02\",\n        \"numero_consegne\": 14,\n        \"totale_parziale_lordo\": 75.30\n      },\n      {\n        \"data\": \"2026-06-03\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 49.50\n      },\n      {\n        \"data\": \"2026-06-04\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 38.01\n      },\n      {\n        \"data\": \"2026-06-05\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 47.98\n      },\n      {\n        \"data\": \"2026-06-06\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 23.83\n      },\n      {\n        \"data\": \"2026-06-07\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 50.12\n      },\n      {\n        \"data\": \"2026-06-08\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 35.98\n      },\n      {\n        \"data\": \"2026-06-09\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 31.92\n      },\n      {\n        \"data\": \"2026-06-10\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 40.15\n      },\n      {\n        \"data\": \"2026-06-11\",\n        \"numero_consegne\": 9,\n        \"totale_parziale_lordo\": 44.57\n      },\n      {\n        \"data\": \"2026-06-12\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 53.73\n      },\n      {\n        \"data\": \"2026-06-13\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 33.40\n      },\n      {\n        \"data\": \"2026-06-14\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 34.83\n      },\n      {\n        \"data\": \"2026-06-15\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 31.65\n      },\n      {\n        \"data\": \"2026-06-16\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 27.72\n      },\n      {\n        \"data\": \"2026-06-17\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 46.02\n      },\n      {\n        \"data\": \"2026-06-18\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 29.31\n      },\n      {\n        \"data\": \"2026-06-19\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 23.06\n      },\n      {\n        \"data\": \"2026-06-20\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 42.73\n      },\n      {\n        \"data\": \"2026-06-21\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 24.43\n      },\n      {\n        \"data\": \"2026-06-22\",\n        \"numero_consegne\": 4,\n        \"totale_parziale_lordo\": 19.33\n      },\n      {\n        \"data\": \"2026-06-23\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 76.19\n      },\n      {\n        \"data\": \"2026-06-24\",\n        \"numero_consegne\": 9,\n        \"totale_parziale_lordo\": 48.78\n      },\n      {\n        \"data\": \"2026-06-25\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 43.97\n      },\n      {\n        \"data\": \"2026-06-26\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 31.64\n      },\n      {\n        \"data\": \"2026-06-27\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 27.30\n      },\n      {\n        \"data\": \"2026-06-28\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 19.64\n      },\n      {\n        \"data\": \"2026-06-29\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 51.68\n      },\n      {\n        \"data\": \"2026-06-30\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 29.52\n      }\n    ],\n    \"totali_consegne\": {\n      \"numero_consegne\": 232,\n      \"totale_parziale_lordo\": 1160.13\n    },\n    \"modifiche_integrazioni\": [\n      {\n        \"id_voce\": \"CONGUAGLIO_CONTRIBUTO_CALDO\",\n        \"mese_riferimento\": \"2026-05\",\n        \"importo_lordo\": 9.10,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 9.10\n      },\n      {\n        \"id_voce\": \"INDENNITA_MALTEMPO\",\n        \"importo_lordo\": 4.13,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 4.13\n      },\n      {\n        \"id_voce\": \"CONTRIBUTO_SALI_MINERALI\",\n        \"importo_lordo\": 4.50,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 4.50\n      },\n      {\n        \"id_voce\": \"CONTRIBUTO_ACQUA\",\n        \"importo_lordo\": 6.60,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 6.60\n      },\n      {\n        \"id_voce\": \"INDENNITA_NOTTURNI\",\n        \"importo_lordo\": 0.00,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 0.00\n      },\n      {\n        \"id_voce\": \"INDENNITA_FESTIVI\",\n        \"importo_lordo\": 5.27,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 5.27\n      }\n    ],\n    \"totali_modifiche_integrazioni\": {\n      \"importo_lordo\": 29.60,\n      \"ritenuta_percentuale\": null,\n      \"ritenuta_importo\": null,\n      \"iva_percentuale\": 0,\n      \"iva_importo\": 0.00,\n      \"totale\": 29.60\n    },\n    \"prospetto_finale\": [\n      {\n        \"id_voce\": \"PROSPETTO_ORDINI_CONSEGNATI\",\n        \"importo_lordo\": 1160.13,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 1160.13\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MODIFICHE_INTEGRAZIONI\",\n        \"importo_lordo\": 29.60,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 29.60\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MANCE\",\n        \"importo_lordo\": 61.87,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 61.87\n      },\n      {\n        \"id_voce\": \"PROSPETTO_TOTALE\",\n        \"importo_lordo\": 1251.60,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": 0,\n        \"iva_importo\": 0.00,\n        \"totale\": 1251.60\n      }\n    ],\n    \"riepilogo\": {\n      \"imposta_bollo\": null,\n      \"percentuale_trattenute_fiscali\": null,\n      \"importo_trattenute_fiscali\": null,\n      \"percentuale_trattenute_previdenziali\": null,\n      \"importo_trattenute_previdenziali\": null,\n      \"pagamenti_contanti_gia_riscossi\": -10.35,\n      \"totale_dovuto\": 1241.25\n    }\n  },\n  {\n    \"id_movimentazione\": \"ri_it_f1ca91d2-fb66-4f58-b710-fc82e1bba16d_46\",\n    \"id_rider\": \"f1ca91d2\",\n    \"periodo_da\": \"2026-06-01\",\n    \"periodo_a\": \"2026-06-30\",\n    \"consegne\": [\n      {\n        \"data\": \"2026-06-01\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 58.88\n      },\n      {\n        \"data\": \"2026-06-02\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 63.20\n      },\n      {\n        \"data\": \"2026-06-03\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 53.23\n      },\n      {\n        \"data\": \"2026-06-04\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 56.42\n      },\n      {\n        \"data\": \"2026-06-05\",\n        \"numero_consegne\": 14,\n        \"totale_parziale_lordo\": 72.17\n      },\n      {\n        \"data\": \"2026-06-06\",\n        \"numero_consegne\": 4,\n        \"totale_parziale_lordo\": 25.83\n      },\n      {\n        \"data\": \"2026-06-07\",\n        \"numero_consegne\": 3,\n        \"totale_parziale_lordo\": 16.81\n      },\n      {\n        \"data\": \"2026-06-08\",\n        \"numero_consegne\": 16,\n        \"totale_parziale_lordo\": 77.99\n      },\n      {\n        \"data\": \"2026-06-09\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 65.89\n      },\n      {\n        \"data\": \"2026-06-10\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 71.25\n      },\n      {\n        \"data\": \"2026-06-11\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 65.54\n      },\n      {\n        \"data\": \"2026-06-12\",\n        \"numero_consegne\": 17,\n        \"totale_parziale_lordo\": 93.74\n      },\n      {\n        \"data\": \"2026-06-13\",\n        \"numero_consegne\": 4,\n        \"totale_parziale_lordo\": 32.93\n      },\n      {\n        \"data\": \"2026-06-14\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 39.51\n      },\n      {\n        \"data\": \"2026-06-15\",\n        \"numero_consegne\": 13,\n        \"totale_parziale_lordo\": 64.72\n      },\n      {\n        \"data\": \"2026-06-16\",\n        \"numero_consegne\": 10,\n        \"totale_parziale_lordo\": 64.66\n      },\n      {\n        \"data\": \"2026-06-17\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 52.06\n      },\n      {\n        \"data\": \"2026-06-18\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 78.56\n      },\n      {\n        \"data\": \"2026-06-19\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 63.84\n      },\n      {\n        \"data\": \"2026-06-20\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 26.56\n      },\n      {\n        \"data\": \"2026-06-22\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 59.52\n      },\n      {\n        \"data\": \"2026-06-23\",\n        \"numero_consegne\": 15,\n        \"totale_parziale_lordo\": 72.01\n      },\n      {\n        \"data\": \"2026-06-24\",\n        \"numero_consegne\": 14,\n        \"totale_parziale_lordo\": 80.00\n      },\n      {\n        \"data\": \"2026-06-25\",\n        \"numero_consegne\": 15,\n        \"totale_parziale_lordo\": 76.82\n      },\n      {\n        \"data\": \"2026-06-26\",\n        \"numero_consegne\": 17,\n        \"totale_parziale_lordo\": 92.82\n      },\n      {\n        \"data\": \"2026-06-27\",\n        \"numero_consegne\": 4,\n        \"totale_parziale_lordo\": 26.32\n      },\n      {\n        \"data\": \"2026-06-28\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 20.71\n      },\n      {\n        \"data\": \"2026-06-29\",\n        \"numero_consegne\": 12,\n        \"totale_parziale_lordo\": 83.63\n      },\n      {\n        \"data\": \"2026-06-30\",\n        \"numero_consegne\": 11,\n        \"totale_parziale_lordo\": 62.38\n      }\n    ],\n    \"totali_consegne\": {\n      \"numero_consegne\": 302,\n      \"totale_parziale_lordo\": 1718.00\n    },\n    \"modifiche_integrazioni\": [\n      {\n        \"id_voce\": \"CONGUAGLIO_CONTRIBUTO_CALDO\",\n        \"mese_riferimento\": \"2026-05\",\n        \"importo_lordo\": 8.30,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.66,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 1.83,\n        \"totale\": 8.47\n      },\n      {\n        \"id_voce\": \"CONTRIBUTO_SALI_MINERALI\",\n        \"importo_lordo\": 4.00,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -0.80,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 0.88,\n        \"totale\": 4.08\n      },\n      {\n        \"id_voce\": \"CONTRIBUTO_ACQUA\",\n        \"importo_lordo\": 5.20,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.04,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 1.14,\n        \"totale\": 5.30\n      },\n      {\n        \"id_voce\": \"INDENNITA_FESTIVI\",\n        \"importo_lordo\": 5.79,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.16,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 1.27,\n        \"totale\": 5.90\n      },\n      {\n        \"id_voce\": \"INDENNITA_MALTEMPO\",\n        \"importo_lordo\": 0.00,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": 0.00,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 0.00,\n        \"totale\": 0.00\n      },\n      {\n        \"id_voce\": \"INDENNITA_NOTTURNI\",\n        \"importo_lordo\": 0.00,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": 0.00,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 0.00,\n        \"totale\": 0.00\n      }\n    ],\n    \"totali_modifiche_integrazioni\": {\n      \"importo_lordo\": 23.29,\n      \"ritenuta_percentuale\": 20,\n      \"ritenuta_importo\": -4.66,\n      \"iva_percentuale\": 22,\n      \"iva_importo\": 5.12,\n      \"totale\": 23.75\n    },\n    \"prospetto_finale\": [\n      {\n        \"id_voce\": \"PROSPETTO_ORDINI_CONSEGNATI\",\n        \"importo_lordo\": 1718.00,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -343.60,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 377.96,\n        \"totale\": 1752.36\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MODIFICHE_INTEGRAZIONI\",\n        \"importo_lordo\": 23.29,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -4.66,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 5.12,\n        \"totale\": 23.75\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MANCE\",\n        \"importo_lordo\": 128.40,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -25.68,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 28.25,\n        \"totale\": 130.97\n      },\n      {\n        \"id_voce\": \"PROSPETTO_TOTALE\",\n        \"importo_lordo\": 1869.69,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -373.94,\n        \"iva_percentuale\": 22,\n        \"iva_importo\": 411.33,\n        \"totale\": 1907.08\n      },\n      {\n        \"id_voce\": \"PROSPETTO_TRATTENUTA_SINDACALE\",\n        \"importo_lordo\": -5.00,\n        \"ritenuta_percentuale\": null,\n        \"ritenuta_importo\": null,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": -5.00\n      }\n    ],\n    \"riepilogo\": {\n      \"imposta_bollo\": null,\n      \"percentuale_trattenute_fiscali\": 20,\n      \"importo_trattenute_fiscali\": -373.94,\n      \"percentuale_trattenute_previdenziali\": null,\n      \"importo_trattenute_previdenziali\": null,\n      \"pagamenti_contanti_gia_riscossi\": -28.32,\n      \"totale_dovuto\": 1873.76\n    }\n  }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 o 207', function () {",
+                  "    pm.expect([201, 207]).to.include(pm.response.code);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('idBatchMovimentazione', json.idBatch);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02. GET /rider/{idRider}/movimentazioni",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/rider/{{idRider}}/movimentazioni?periodoDa=2026-06-01&periodoA=2026-06-30",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "rider",
+                "{{idRider}}",
+                "movimentazioni"
+              ],
+              "query": [
+                {
+                  "key": "periodoDa",
+                  "value": "2026-06-01"
+                },
+                {
+                  "key": "periodoA",
+                  "value": "2026-06-30"
+                }
+              ]
+            },
+            "description": "Elenco delle movimentazioni correnti del rider, filtrabile per periodo (§9)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03. GET /movimentazioni/{idMovimentazione}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movimentazioni/{{idMovimentazione}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movimentazioni",
+                "{{idMovimentazione}}"
+              ]
+            },
+            "description": "Versione corrente completa (header + consegne + voci) di una movimentazione."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04. GET /movimentazioni/{idMovimentazione}/storico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movimentazioni/{{idMovimentazione}}/storico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movimentazioni",
+                "{{idMovimentazione}}",
+                "storico"
+              ]
+            },
+            "description": "Tutte le versioni ricevute nel tempo per questa movimentazione, con dt_inserimento e id_batch (§9, §10)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Almeno una versione in storico', function () {",
+                  "    pm.expect(pm.response.json().length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05. DELETE /movimentazioni/{idMovimentazione} - annullamento (§9.3)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movimentazioni/{{idMovimentazione}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movimentazioni",
+                "{{idMovimentazione}}"
+              ]
+            },
+            "description": "Annullamento logico della versione corrente. Alternativa alla 06, non in sequenza sulla stessa movimentazione (dopo l'annullamento non c'è più una versione corrente da rettificare, finché non si ricarica con la 01).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Importi consegne errati, ricalcolo in corso dal gestionale rider\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06. POST /movimentazioni/{idMovimentazione}/rettifica (§9.3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/movimentazioni/{{idMovimentazione}}/rettifica",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "movimentazioni",
+                "{{idMovimentazione}}",
+                "rettifica"
+              ]
+            },
+            "description": "Invia un prospetto corretto per la versione corrente, con motivo esplicito.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dati\": {\n    \"id_movimentazione\": \"ri_it_b9ddabec-f763-4152-9c80-de0187b95259_56\",\n    \"id_rider\": \"b9ddabec\",\n    \"periodo_da\": \"2026-06-01\",\n    \"periodo_a\": \"2026-06-30\",\n    \"consegne\": [\n      {\n        \"data\": \"2026-06-01\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 35.21\n      },\n      {\n        \"data\": \"2026-06-02\",\n        \"numero_consegne\": 8,\n        \"totale_parziale_lordo\": 40.25\n      },\n      {\n        \"data\": \"2026-06-07\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 20.6\n      },\n      {\n        \"data\": \"2026-06-08\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 33.44\n      },\n      {\n        \"data\": \"2026-06-09\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 30.74\n      },\n      {\n        \"data\": \"2026-06-14\",\n        \"numero_consegne\": 3,\n        \"totale_parziale_lordo\": 13.6\n      },\n      {\n        \"data\": \"2026-06-15\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 59.96\n      },\n      {\n        \"data\": \"2026-06-16\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 45.21\n      },\n      {\n        \"data\": \"2026-06-21\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 23.81\n      },\n      {\n        \"data\": \"2026-06-22\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 41.79\n      },\n      {\n        \"data\": \"2026-06-23\",\n        \"numero_consegne\": 6,\n        \"totale_parziale_lordo\": 31.41\n      },\n      {\n        \"data\": \"2026-06-29\",\n        \"numero_consegne\": 7,\n        \"totale_parziale_lordo\": 37.57\n      },\n      {\n        \"data\": \"2026-06-30\",\n        \"numero_consegne\": 5,\n        \"totale_parziale_lordo\": 34.32\n      }\n    ],\n    \"totali_consegne\": {\n      \"numero_consegne\": 79,\n      \"totale_parziale_lordo\": 447.91\n    },\n    \"modifiche_integrazioni\": [\n      {\n        \"id_voce\": \"INDENNITA_FESTIVI\",\n        \"importo_lordo\": 3.27,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -0.65,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 2.62\n      },\n      {\n        \"id_voce\": \"INDENNITA_MALTEMPO\",\n        \"importo_lordo\": 1.78,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -0.36,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 1.42\n      }\n    ],\n    \"totali_modifiche_integrazioni\": {\n      \"importo_lordo\": 5.05,\n      \"ritenuta_percentuale\": 20,\n      \"ritenuta_importo\": -1.01,\n      \"iva_percentuale\": null,\n      \"iva_importo\": null,\n      \"totale\": 4.04\n    },\n    \"prospetto_finale\": [\n      {\n        \"id_voce\": \"PROSPETTO_ORDINI_CONSEGNATI\",\n        \"importo_lordo\": 447.91,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -89.58,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 358.33\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MODIFICHE_INTEGRAZIONI\",\n        \"importo_lordo\": 5.05,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.01,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 4.04\n      },\n      {\n        \"id_voce\": \"PROSPETTO_MANCE\",\n        \"importo_lordo\": 9.0,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -1.8,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 7.2\n      },\n      {\n        \"id_voce\": \"PROSPETTO_TOTALE\",\n        \"importo_lordo\": 461.96,\n        \"ritenuta_percentuale\": 20,\n        \"ritenuta_importo\": -92.39,\n        \"iva_percentuale\": null,\n        \"iva_importo\": null,\n        \"totale\": 369.57\n      }\n    ],\n    \"riepilogo\": {\n      \"imposta_bollo\": -2.0,\n      \"percentuale_trattenute_fiscali\": 20,\n      \"importo_trattenute_fiscali\": -92.39,\n      \"percentuale_trattenute_previdenziali\": null,\n      \"importo_trattenute_previdenziali\": null,\n      \"pagamenti_contanti_gia_riscossi\": null,\n      \"totale_dovuto\": 367.57\n    }\n  },\n  \"motivo\": \"Ricalcolo importi dopo segnalazione rider\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Batch",
+      "item": [
+        {
+          "name": "01. GET /batch/{idBatch}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/{{idBatch}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch",
+                "{{idBatch}}"
+              ]
+            },
+            "description": "Dettaglio di un batch: esito, contatori, eventuale motivo se è un annullamento/rettifica (§9). Impostare {{idBatch}} con un id_batch reale restituito da una delle chiamate di carico precedenti."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02. GET /batch?tipoOperazione=ANNULLAMENTO",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?tipoOperazione=ANNULLAMENTO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "tipoOperazione",
+                  "value": "ANNULLAMENTO"
+                }
+              ]
+            },
+            "description": "Log di tutti gli annullamenti effettuati, per audit (§9.3, §10)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03. GET /batch?tipoOperazione=RETTIFICA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch?tipoOperazione=RETTIFICA",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "tipoOperazione",
+                  "value": "RETTIFICA"
+                }
+              ]
+            },
+            "description": "Log di tutte le rettifiche effettuate, per audit (§9.3, §10)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04. DELETE /batch/{idBatch} - annullamento in blocco (§9.3)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch/{{idBatch}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "batch",
+                "{{idBatch}}"
+              ]
+            },
+            "description": "Annulla in blocco tutte le righe ancora correnti originate da questo batch - usare quando un intero file e' stato caricato per errore. Impostare {{idBatch}} con l'id_batch da annullare (es. {{idBatchMovimentazione}}).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"File movimentazioni di giugno caricato due volte per lo stesso rider\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

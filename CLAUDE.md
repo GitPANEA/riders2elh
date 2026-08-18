@@ -34,7 +34,7 @@ journalctl -u riders2eLH -n 50 --no-pager
 
 `deploy/riders2eLH.service` è la unit systemd di riferimento (jar eseguito come processo standalone con Tomcat embedded, non un WAR su Tomcat esterno). **Il deploy Maven non la copia**: il task `<scp>` trasferisce solo `${finalName}.jar`, quindi ogni modifica alla unit va portata sul server a mano (`scp` in `/tmp`, poi `cp` in `/etc/systemd/system/` e `daemon-reload`) — vedi `deploy/README.md`. I segreti non stanno mai nel repo: vanno in un `EnvironmentFile` esterno sul server (`/opt/riders2eLH/riders2eLH.env`, permessi `600`), referenziato dalla unit — `DB_PASSWORD` e `KEYSTORE_PASSWORD`.
 
-**HTTPS**: la porta 9443 serve TLS terminato da Tomcat embedded (`server.ssl.*` in `application-local.yml`), non c'è reverse proxy davanti. Il keystore PKCS12 sta sul server in `/opt/riders2eLH/riders2eLH-keystore.p12` (permessi `600`, proprietario = utenza del servizio), generato con `keytool -genkeypair -alias riderpay -storetype PKCS12 ... -ext "SAN=ip:10.10.7.46"` — il `SAN` è necessario perché i client validano quello, non il `CN`. `keytool` non è nel `PATH` sul server: va invocato per percorso assoluto dal JRE 21 usato dalla unit. Il certificato è **self-signed**, quindi i client devono disattivare la verifica (`curl -k`, Postman: SSL certificate verification off); per uscire da dev serve un certificato della CA aziendale. Nota che attivando `server.ssl` la 9443 non risponde più in HTTP.
+**HTTPS**: la porta 9443 serve TLS terminato da Tomcat embedded (`server.ssl.*` in `application-local.yml`); **davanti all'applicazione c'è però un reverse proxy su un altro host** — vedi la sezione "Topologia di rete" qui sotto. Il keystore PKCS12 sta sul server in `/opt/riders2eLH/riders2eLH-keystore.p12` (permessi `600`, proprietario = utenza del servizio), generato con `keytool -genkeypair -alias riderpay -storetype PKCS12 ... -ext "SAN=ip:10.10.7.46"` — il `SAN` è necessario perché i client validano quello, non il `CN`. `keytool` non è nel `PATH` sul server: va invocato per percorso assoluto dal JRE 21 usato dalla unit. Il certificato è **self-signed**, quindi i client devono disattivare la verifica (`curl -k`, Postman: SSL certificate verification off); per uscire da dev serve un certificato della CA aziendale. Nota che attivando `server.ssl` la 9443 non risponde più in HTTP.
 
 `deploy/README.md` contiene i comandi di setup una tantum sul server (directory, `EnvironmentFile`, unit systemd, generazione del keystore TLS). L'host di deploy è definito in `remote.deploy.host` nel `pom.xml` — quella resta la fonte autorevole in caso di dubbio.
 
@@ -129,6 +129,50 @@ Quattro controller sotto `/api/v1`, tutti seguono lo stesso schema (POST ingesti
 
 `GlobalExceptionHandler` centralizza il mapping eccezioni → HTTP: `RisorsaNonTrovataException`→404, `ConflittoConcorrenzaException`→409, `ClientNonAutorizzatoException`→401, `MethodArgumentNotValidException`→400.
 
+### Topologia di rete: c'è un reverse proxy, su un altro host (13 agosto 2026)
+
+Scoperto in dev il 13 agosto 2026, mentre si provava il nuovo URL: **`devws.paneagroup.it` non è la macchina dell'applicazione.**
+
+| Nome | IP | Cos'è |
+|---|---|---|
+| `10.10.7.46` | privato | la macchina dell'applicazione (`microservices-with-gui`), dove gira la unit `riders2eLH` |
+| `devws.paneagroup.it` | `150.230.147.192` (pubblico) | un reverse proxy su un **host diverso**, che inoltra verso il backend |
+
+Conseguenze pratiche:
+
+- **Per provare l'API si usa `https://10.10.7.46:9443/riders2elh/`** (`baseUrl` della collection Postman). Verificato il 13 agosto 2026: `POST /riders2elh/oauth2/token` risponde `200` con token valido. Il certificato copre anche l'IP (SAN con `IPAddress`), quindi non serve altro oltre a disattivare la verifica del self-signed.
+- **`https://devws.paneagroup.it:9443/riders2elh/` restituisce `502 Bad Gateway`**: è il proxy che non riesce a raggiungere il backend. Una pagina 502 in HTML non la produce mai Tomcat embedded — se la si vede, si sta parlando col proxy, non con l'applicazione. La configurazione del proxy **non è nel repo né su questa macchina** (nessun nginx installato su `10.10.7.46`): è in mano ai sistemisti. Da verificare con loro, in ordine di probabilità: (1) il proxy parla HTTP verso il backend, che accetta **solo** HTTPS sulla 9443; (2) inoltra mantenendo il prefisso `/riders2elh` oppure lo strippa — se lo strippa va **rimosso** `server.servlet.context-path` da `application.yml`, perché l'app deve stare su `/`; (3) accetta il certificato self-signed del backend (`proxy_ssl_verify off` o certificato nel truststore).
+- Chiamando via `devws.paneagroup.it`, **il certificato che il client valida è quello del proxy**, non quello dell'applicazione: il SAN rigenerato serve al proxy per validare il backend, non al browser.
+
+**Diagnosi**: davanti a un errore su `devws.paneagroup.it`, il primo passo è ripetere la chiamata su `10.10.7.46` (o su `localhost` dal server) per separare "app rotta" da "proxy mal configurato". Dal server:
+
+```bash
+curl -vk -X POST 'https://localhost:9443/riders2elh/oauth2/token' -d 'grant_type=client_credentials&client_id=riders2elh-test&client_secret=...'
+echo | openssl s_client -connect localhost:9443 2>/dev/null | openssl x509 -noout -subject -ext subjectAltName
+```
+
+**Falso allarme da conoscere**: all'avvio Tomcat logga `certificate type [UNDEFINED] configured from keystore [/home/<utente>/.keystore] using alias [riderpay]`. Quel path è il **default interno** di `SSLHostConfigCertificate`, non il file effettivamente aperto — Spring Boot passa il keystore già risolto. Il file `~/.keystore` non esiste nemmeno. Per sapere quale certificato è davvero in uso si interroga la porta con `openssl s_client` (comando sopra), non si legge quella riga di log.
+
+### Rigenerazione del keystore TLS con SAN multiplo (13 agosto 2026)
+
+Il keystore è stato rigenerato per includere il nome DNS oltre all'IP: i client validano il SAN, quindi con `SAN=ip:10.10.7.46` da solo una chiamata a `https://devws.paneagroup.it:9443` dà *hostname mismatch* (errore distinto, e più bloccante, del solito avviso self-signed). SAN attuale: `DNS:devws.paneagroup.it, IP Address:10.10.7.46`, `CN=devws.paneagroup.it`, validità 10 anni.
+
+Procedura seguita, da ripetere se il SAN cambia (i primi due passi servono perché `-genkeypair` su un keystore esistente **aggiunge** una voce e fallisce se l'alias c'è già; si sposta il vecchio file invece di cancellarlo, così il rollback è immediato):
+
+```bash
+grep -E "ExecStart|User=" /etc/systemd/system/riders2eLH.service   # utenza e percorso del JRE
+sudo mv /opt/riders2eLH/riders2eLH-keystore.p12 /opt/riders2eLH/riders2eLH-keystore.p12.bak
+sudo /usr/lib/jvm/jre-21-openjdk-21.0.11.0.10-1.0.1.el8.x86_64/bin/keytool -genkeypair \
+  -alias riderpay -keyalg RSA -keysize 2048 -storetype PKCS12 \
+  -keystore /opt/riders2eLH/riders2eLH-keystore.p12 -validity 3650 \
+  -dname "CN=devws.paneagroup.it, OU=IT, O=Panea Group, C=IT" \
+  -ext "SAN=dns:devws.paneagroup.it,ip:10.10.7.46"
+sudo chown f.cavaliere:sistemisti /opt/riders2eLH/riders2eLH-keystore.p12
+sudo chmod 600 /opt/riders2eLH/riders2eLH-keystore.p12
+```
+
+Tre punti dove è facile sbagliare: la password va inserita **identica a `KEYSTORE_PASSWORD`** nell'`EnvironmentFile` (in PKCS12 coincide con quella della chiave; se differisce l'avvio fallisce); l'alias deve restare `riderpay`, che è quello cercato da `application-local.yml`; il `chown` è obbligatorio perché `keytool` sotto `sudo` crea il file come `root` e il servizio non lo leggerebbe (utenza dalla `User=` della unit, gruppo `sistemisti`). Il certificato resta **self-signed**: l'hostname mismatch sparisce, l'avviso di CA non attendibile no — per quello serve un certificato della CA aziendale.
+
 ### Context path `/riders2elh` (13 agosto 2026)
 
 `server.servlet.context-path: /riders2elh` in `application.yml`: **prefissa tutti i path**, non solo Swagger. `/api/v1/batch` → `/riders2elh/api/v1/batch`, `/oauth2/token` → `/riders2elh/oauth2/token`. Va aggiornato il `baseUrl` della collection Postman e qualunque altro client. Minuscolo per coerenza col package Java e con l'URL concordato; il nome del jar, la unit systemd e `/opt/riders2eLH/` restano `riders2eLH`.
@@ -178,6 +222,7 @@ La collection Postman (`docs/riderpay.postman_collection.json`) ha una cartella 
 | nessun header `Authorization` | `401` `Bearer` |
 | Bearer vuoto o `{{accessToken}}` non risolto | `401` `invalid_token` |
 | **token valido + `Content-Type` non accettato dall'endpoint** | **`403` `insufficient_scope`** |
+| token valido + parametro non convertibile (data malformata, id non numerico) | `400` (dal 13 agosto 2026; **prima era `500`**) |
 | token valido + eccezione non gestita nel codice applicativo | `500` (dal 13 agosto 2026; **prima era `403` `insufficient_scope`**) |
 
 Quindi: **401 = problema di token, 403 = problema della richiesta** (tipicamente `Content-Type`), **500 = bug lato server, la causa è nel journal**, da diagnosticare nel journal e non dall'header. Il caso tipico è `POST /api/v1/voci`, che vuole `multipart/form-data` (`@RequestParam("file")`) e rifiuta JSON. In Postman va usato Body → form-data con la riga `file` di tipo File e il file **riselezionato a mano** dopo l'import (l'export della collection non incorpora i binari, e un form-data vuoto viene inviato senza `Content-Type` multipart); nessun header `Content-Type` manuale, che sovrascriverebbe il boundary generato. Verifica rapida da terminale — in PowerShell serve `curl.exe`, perché `curl` è alias di `Invoke-WebRequest` e non supporta `-H`/`-F`:
@@ -187,6 +232,8 @@ curl.exe -vk -X POST 'https://10.10.7.46:9443/api/v1/voci' -H "Authorization: Be
 ```
 
 `GlobalExceptionHandler` gestisce ora `HttpMediaTypeNotSupportedException`→415, `HttpRequestMethodNotSupportedException`→405, `HttpMessageNotReadableException`→400 e `MissingServletRequestPartException`→400, così questi errori non arrivano più al client travestiti da 403.
+
+**Parametri di richiesta non convertibili → 400 (13 agosto 2026).** `MethodArgumentTypeMismatchException` (la forma in cui Spring incarta la `ConversionFailedException` per `@RequestParam`/`@PathVariable`) è ora gestita: risponde `400` nominando il parametro e, per i tipi con un formato atteso, indicandolo — `yyyy-MM-dd` per le date, "valore numerico" per i numeri, l'elenco delle costanti per gli enum. Serve perché la `ConversionFailedException` da sola dice solo che il parse è fallito, lasciando indovinare **quale** dei parametri della query string sia il colpevole. Occorso in dev il 13 agosto 2026 passando un ISO datetime completo (`2026-08-13T14:39:17.499774464Z`) a `dataInizio`, che vuole una `LocalDate`: senza l'handler l'eccezione cadeva nella rete `Exception` e rispondeva `500`, cioè un bug del server per un errore del chiamante.
 
 **Rete di sicurezza su `Exception` (13 agosto 2026).** `GlobalExceptionHandler` ha ora anche un `@ExceptionHandler(Exception.class)` che logga a `ERROR` con stack trace e risponde `500` con messaggio generico (nessun dettaglio interno al client). Gli handler specifici mantengono la precedenza, perché Spring risolve per tipo più specifico. Serve perché un'eccezione applicativa non gestita risaliva la filter chain fino all'`ExceptionTranslationFilter`, che la traduceva in `403 insufficient_scope`: un bug interno si presentava come problema di autorizzazione, mandando a cercare la causa nel token o negli scope invece che nel codice. **Non rimuovere questo handler** né lasciare che un `@ExceptionHandler` più specifico risponda 403.
 

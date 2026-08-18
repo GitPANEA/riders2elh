@@ -15,9 +15,12 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,35 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ClientNonAutorizzatoException.class)
     public ResponseEntity<Map<String, Object>> gestisciClientNonAutorizzato(ClientNonAutorizzatoException e) {
         return errore(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    /**
+     * Parametro di richiesta non convertibile nel tipo dichiarato dal controller: una data che
+     * non rispetta {@code yyyy-MM-dd}, un id non numerico, un enum inesistente su un parametro
+     * tipizzato. È un errore del chiamante, quindi 400 e non 500.
+     * <p>
+     * Il messaggio nomina il parametro e, per i tipi con un formato atteso, lo indica: la
+     * {@code ConversionFailedException} sottostante da sola direbbe solo che il parse è
+     * fallito, lasciando indovinare quale dei parametri della query string sia il colpevole.
+     * Senza questo handler l'eccezione cadeva nella rete {@code Exception} e rispondeva 500 —
+     * osservato in dev il 13 agosto 2026 passando un ISO datetime completo a {@code dataInizio}.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> gestisciTipoParametroErrato(MethodArgumentTypeMismatchException e) {
+        Class<?> atteso = e.getRequiredType();
+        String formato = "";
+        if (atteso != null) {
+            if (LocalDate.class.isAssignableFrom(atteso)) {
+                formato = " Formato atteso: yyyy-MM-dd (solo la data, senza orario).";
+            } else if (Number.class.isAssignableFrom(atteso) || atteso.isPrimitive()) {
+                formato = " È atteso un valore numerico.";
+            } else if (atteso.isEnum()) {
+                formato = " Valori ammessi: " + Arrays.stream(atteso.getEnumConstants())
+                        .map(String::valueOf).collect(Collectors.joining(", ")) + ".";
+            }
+        }
+        return errore(HttpStatus.BAD_REQUEST, "Valore non valido per il parametro '" + e.getName()
+                + "': '" + e.getValue() + "'." + formato);
     }
 
     /** Parametri di richiesta incoerenti tra loro (es. dataInizio successiva a dataFine). */

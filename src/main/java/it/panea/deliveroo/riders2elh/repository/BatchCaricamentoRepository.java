@@ -55,11 +55,49 @@ public class BatchCaricamentoRepository {
                 """, Timestamp.from(Instant.now()), esito.name(), totali, ok, ko, idBatch);
     }
 
-    public void registraErrore(long idBatch, String chiaveBusiness, String messaggioErrore, String payloadJson) {
+    /**
+     * Prima operazione del task asincrono: segna l'inizio effettivo dell'elaborazione,
+     * distinto da DT_RICEZIONE (quando la richiesta HTTP è arrivata) perché con
+     * l'esecuzione asincrona i due istanti possono differire se l'executor è occupato.
+     */
+    public void avviaElaborazione(long idBatch, int totali) {
         jdbcTemplate.update("""
-                INSERT INTO T_BATCH_CARICAMENTO_ERRORE (ID_BATCH, CHIAVE_BUSINESS, MESSAGGIO_ERRORE, PAYLOAD_JSON)
-                VALUES (?, ?, ?, ?)
-                """, idBatch, chiaveBusiness, messaggioErrore, payloadJson);
+                UPDATE T_BATCH_CARICAMENTO
+                   SET DT_INIZIO_ELABORAZIONE = ?, ESITO = ?, NUM_RECORD_TOTALI = ?
+                 WHERE ID_BATCH = ?
+                """, Timestamp.from(Instant.now()), EsitoBatch.IN_CORSO.name(), totali, idBatch);
+    }
+
+    /**
+     * Aggiornamento incrementale dei contatori durante l'elaborazione, per un polling
+     * che mostri progresso reale. Chiamato ogni N record (soglia configurabile) e non a
+     * ogni record: un UPDATE per record raddoppierebbe il carico di scrittura sul batch
+     * per un beneficio di sola leggibilità del polling.
+     */
+    public void aggiornaProgresso(long idBatch, int ok, int ko) {
+        jdbcTemplate.update("""
+                UPDATE T_BATCH_CARICAMENTO SET NUM_RECORD_OK = ?, NUM_RECORD_KO = ? WHERE ID_BATCH = ?
+                """, ok, ko, idBatch);
+    }
+
+    public void registraErrore(long idBatch, Integer numeroRiga, String chiaveBusiness, String messaggioErrore, String payloadJson) {
+        jdbcTemplate.update("""
+                INSERT INTO T_BATCH_CARICAMENTO_ERRORE (ID_BATCH, NUMERO_RIGA, CHIAVE_BUSINESS, MESSAGGIO_ERRORE, PAYLOAD_JSON)
+                VALUES (?, ?, ?, ?, ?)
+                """, idBatch, numeroRiga, chiaveBusiness, messaggioErrore, payloadJson);
+    }
+
+    /**
+     * GET /api/v1/batch/{idBatch}/errori — righe anomale di un batch, in ordine di
+     * inserimento, paginate: un batch da 30000 record può generare fino a 30000 righe
+     * di errore, quindi nessuna risposta senza paginazione.
+     */
+    public List<BatchErroreRow> elencaErrori(long idBatch, int page, int size) {
+        return jdbcTemplate.query("""
+                SELECT * FROM T_BATCH_CARICAMENTO_ERRORE WHERE ID_BATCH = ?
+                 ORDER BY ID_BATCH_ERRORE
+                 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                """, MAPPER_ERRORE, idBatch, page * size, size);
     }
 
     public Optional<BatchRow> trovaPerId(long idBatch) {
@@ -116,6 +154,10 @@ public class BatchCaricamentoRepository {
      * valorizzati. Non si usa {@code getInt}/{@code getLong} perché restituiscono 0 sui NULL,
      * falsando i contatori e {@code ID_BATCH_RIFERIMENTO}.
      */
+    /**
+     * probabilmenteBloccato è sempre false qui: dipende da una soglia di tempo, decisione
+     * applicativa e non di mapping — calcolato da BatchQueryService dopo la lettura.
+     */
     private static final RowMapper<BatchRow> MAPPER = (rs, rowNum) -> new BatchRow(
             rs.getLong("ID_BATCH"),
             TipoEntita.valueOf(rs.getString("TIPO_ENTITA")),
@@ -125,10 +167,22 @@ public class BatchCaricamentoRepository {
             rs.getString("NOME_FILE_ORIGINE"),
             rs.getString("CLIENT_ID"),
             rs.getTimestamp("DT_RICEZIONE").toInstant(),
+            rs.getTimestamp("DT_INIZIO_ELABORAZIONE") != null ? rs.getTimestamp("DT_INIZIO_ELABORAZIONE").toInstant() : null,
             rs.getTimestamp("DT_FINE_ELABORAZIONE") != null ? rs.getTimestamp("DT_FINE_ELABORAZIONE").toInstant() : null,
             rs.getString("ESITO") != null ? EsitoBatch.valueOf(rs.getString("ESITO")) : null,
             rs.getObject("NUM_RECORD_TOTALI", Integer.class),
             rs.getObject("NUM_RECORD_OK", Integer.class),
-            rs.getObject("NUM_RECORD_KO", Integer.class)
+            rs.getObject("NUM_RECORD_KO", Integer.class),
+            false
+    );
+
+    private static final RowMapper<BatchErroreRow> MAPPER_ERRORE = (rs, rowNum) -> new BatchErroreRow(
+            rs.getLong("ID_BATCH_ERRORE"),
+            rs.getLong("ID_BATCH"),
+            rs.getObject("NUMERO_RIGA", Integer.class),
+            rs.getString("CHIAVE_BUSINESS"),
+            rs.getString("MESSAGGIO_ERRORE"),
+            rs.getString("PAYLOAD_JSON"),
+            rs.getTimestamp("DT_INSERIMENTO").toInstant()
     );
 }

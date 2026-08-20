@@ -1,5 +1,6 @@
 package it.panea.deliveroo.riders2elh.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.panea.deliveroo.riders2elh.common.*;
 import it.panea.deliveroo.riders2elh.dto.AnnullamentoResponse;
 import it.panea.deliveroo.riders2elh.dto.BatchEsitoResponse;
@@ -10,7 +11,9 @@ import it.panea.deliveroo.riders2elh.repository.RiderAnagraficaRepository;
 import it.panea.deliveroo.riders2elh.repository.RiderAnagraficaRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,40 +30,84 @@ public class AnagraficaService {
     private final RiderAnagraficaRepository repository;
     private final MasterKeyRepository masterKeyRepository;
     private final BatchCaricamentoRepository batchRepository;
+    private final ObjectMapper objectMapper;
+    private final int intervalloProgresso;
 
     public AnagraficaService(RiderAnagraficaRepository repository, MasterKeyRepository masterKeyRepository,
-                              BatchCaricamentoRepository batchRepository) {
+                              BatchCaricamentoRepository batchRepository, ObjectMapper objectMapper,
+                              @Value("${riders2eLH.batch.intervallo-progresso:1000}") int intervalloProgresso) {
         this.repository = repository;
         this.masterKeyRepository = masterKeyRepository;
         this.batchRepository = batchRepository;
+        this.objectMapper = objectMapper;
+        this.intervalloProgresso = intervalloProgresso;
     }
 
     /**
-     * Flusso § 9.1. Deliberatamente NON @Transactional: ogni record ha la propria
-     * unità atomica in repository.sostituisciVersioneCorrente (che è @Transactional),
-     * così un record malformato finisce in T_BATCH_CARICAMENTO_ERRORE senza fare
-     * rollback dei record già scritti correttamente nello stesso batch.
+     * Flusso § 9.1, avvio: crea il batch e ritorna subito, senza elaborare la lista.
+     * Il controller risponde 202 con l'id batch e affida l'elaborazione a
+     * {@link #elaboraAsync}, invocato dal controller stesso (una self-invocation da
+     * questo service non passerebbe dal proxy Spring che rende @Async effettivo).
      */
-    public BatchEsitoResponse carica(List<RiderAnagraficaDto> lista, String nomeFileOrigine, String checksum, String clientId) {
-        long idBatch = batchRepository.creaBatch(TipoEntita.ANAGRAFICA, TipoOperazione.CARICAMENTO, null,
+    public long avviaCaricamento(List<RiderAnagraficaDto> lista, String nomeFileOrigine, String checksum, String clientId) {
+        return batchRepository.creaBatch(TipoEntita.ANAGRAFICA, TipoOperazione.CARICAMENTO, null,
                 null, nomeFileOrigine, "JSON", clientId, checksum);
+    }
+
+    /**
+     * Elaborazione effettiva, su thread separato (pool "batchTaskExecutor", § 9.1). Non
+     * @Transactional a livello di metodo, per lo stesso motivo di sempre: ogni record ha
+     * la propria unità atomica in repository.sostituisciVersioneCorrente, così un record
+     * malformato finisce in T_BATCH_CARICAMENTO_ERRORE senza fare rollback dei record già
+     * scritti correttamente nello stesso batch.
+     */
+    @Async("batchTaskExecutor")
+    public void elaboraAsync(long idBatch, List<RiderAnagraficaDto> lista) {
         int ok = 0, ko = 0;
-        for (RiderAnagraficaDto dto : lista) {
+        try {
+            batchRepository.avviaElaborazione(idBatch, lista.size());
+            for (int i = 0; i < lista.size(); i++) {
+                RiderAnagraficaDto dto = lista.get(i);
+                try {
+                    caricaSingolo(dto, idBatch);
+                    ok++;
+                } catch (Exception e) {
+                    ko++;
+                    log.error("Batch {}: caricamento fallito per il rider {}", idBatch, dto.idRider(), e);
+                    batchRepository.registraErrore(idBatch, i, dto.idRider(), messaggioCompleto(e), payloadJson(dto));
+                }
+                if ((ok + ko) % intervalloProgresso == 0) {
+                    batchRepository.aggiornaProgresso(idBatch, ok, ko);
+                }
+            }
+            EsitoBatch esito = ko == 0 ? EsitoBatch.OK : (ok == 0 ? EsitoBatch.KO : EsitoBatch.PARZIALE);
+            batchRepository.chiudiBatch(idBatch, esito, lista.size(), ok, ko);
+        } catch (Exception e) {
+            // Eccezione fuori dal ciclo per-record (es. avviaElaborazione/chiudiBatch
+            // falliti): senza questo catch resterebbe solo nell'AsyncUncaughtExceptionHandler
+            // di default di Spring, e il batch resterebbe bloccato in IN_CORSO per sempre.
+            log.error("Batch {}: elaborazione interrotta da un errore tecnico", idBatch, e);
             try {
-                caricaSingolo(dto, idBatch);
-                ok++;
-            } catch (Exception e) {
-                ko++;
-                log.error("Batch {}: caricamento fallito per il rider {}", idBatch, dto.idRider(), e);
-                batchRepository.registraErrore(idBatch, dto.idRider(), messaggioCompleto(e), dto.toString());
+                batchRepository.chiudiBatch(idBatch, EsitoBatch.ERRORE_TECNICO, lista.size(), ok, ko);
+            } catch (Exception e2) {
+                log.error("Batch {}: impossibile marcare il batch come ERRORE_TECNICO, resta IN_CORSO", idBatch, e2);
             }
         }
-        EsitoBatch esito = ko == 0 ? EsitoBatch.OK : (ok == 0 ? EsitoBatch.KO : EsitoBatch.PARZIALE);
-        batchRepository.chiudiBatch(idBatch, esito, lista.size(), ok, ko);
-        return new BatchEsitoResponse(idBatch, TipoOperazione.CARICAMENTO, esito, lista.size(), ok, ko, Instant.now());
+    }
+
+    private String payloadJson(RiderAnagraficaDto dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (Exception e) {
+            return dto.toString();
+        }
     }
 
     private void caricaSingolo(RiderAnagraficaDto dto, long idBatch) {
+        List<String> violazioni = ValidatoreFormato.validaAnagrafica(dto);
+        if (!violazioni.isEmpty()) {
+            throw new RecordNonValidoException(violazioni);
+        }
         masterKeyRepository.assicuraRider(dto.idRider());
         var correnteEsistente = repository.trovaVersioneCorrente(dto.idRider());
         if (correnteEsistente.isPresent() && correnteEsistente.get().dati().equals(dto)) {

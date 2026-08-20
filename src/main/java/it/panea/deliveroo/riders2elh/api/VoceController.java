@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.panea.deliveroo.riders2elh.common.ChecksumUtils;
+import it.panea.deliveroo.riders2elh.common.EsitoBatch;
 import it.panea.deliveroo.riders2elh.common.SecurityUtils;
+import it.panea.deliveroo.riders2elh.common.TipoOperazione;
 import it.panea.deliveroo.riders2elh.dto.*;
 import it.panea.deliveroo.riders2elh.repository.VoceRow;
 import it.panea.deliveroo.riders2elh.service.VoceService;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +41,14 @@ public class VoceController {
         this.service = service;
     }
 
-    /** POST /api/v1/voci — ingestione di voci.csv (§ 9), upload multipart. */
+    /** POST /api/v1/voci — ingestione di voci.csv (§ 9), upload multipart, asincrona. */
     @Operation(summary = "Ingestione voci da CSV",
             description = """
-                    Carica voci.csv come upload multipart/form-data, nella parte 'file'. \
+                    Avvia il caricamento di voci.csv come upload multipart/form-data, nella parte \
+                    'file': risponde subito con l'id del batch, poi elabora l'elenco su un thread \
+                    separato. Per l'esito (contatori, eventuali errori) fare polling su \
+                    GET /api/v1/batch/{idBatch}.
+
                     Colonne attese nell'header: id_voce, descrizione, mese_riferimento_richiesto.
 
                     **Questo endpoint accetta solo multipart/form-data**, non JSON: inviare JSON \
@@ -49,10 +56,12 @@ public class VoceController {
                     Body -> form-data (Postman) senza impostare Content-Type a mano, che \
                     sovrascriverebbe il boundary generato.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Tutte le voci caricate (nessun KO)"),
-            @ApiResponse(responseCode = "207", description = "Caricamento parziale: almeno una voce "
-                    + "in errore"),
+            @ApiResponse(responseCode = "202", description = "Richiesta accettata: il batch è "
+                    + "stato creato ed è in elaborazione. La risposta riporta solo l'id batch, "
+                    + "i contatori non sono ancora definitivi."),
             @ApiResponse(responseCode = "400", description = "Parte 'file' mancante o CSV illeggibile",
+                    content = @Content(schema = @Schema(implementation = ErroreResponse.class))),
+            @ApiResponse(responseCode = "413", description = "File più grande del limite consentito",
                     content = @Content(schema = @Schema(implementation = ErroreResponse.class))),
             @ApiResponse(responseCode = "415", description = "Content-Type non multipart/form-data",
                     content = @Content(schema = @Schema(implementation = ErroreResponse.class)))
@@ -72,8 +81,11 @@ public class VoceController {
             }
         }
         String checksum = ChecksumUtils.sha256(lista.toString());
-        BatchEsitoResponse esito = service.carica(lista, file.getOriginalFilename(), checksum, SecurityUtils.clientIdAutenticato());
-        return ResponseEntity.status(esito.recordKo() == 0 ? 201 : 207).body(esito);
+        String clientId = SecurityUtils.clientIdAutenticato();
+        long idBatch = service.avviaCaricamento(lista, file.getOriginalFilename(), checksum, clientId);
+        service.elaboraAsync(idBatch, lista);
+        return ResponseEntity.status(202).body(new BatchEsitoResponse(
+                idBatch, TipoOperazione.CARICAMENTO, EsitoBatch.IN_CORSO, lista.size(), 0, 0, Instant.now()));
     }
 
     @Operation(summary = "Elenco delle voci correnti",

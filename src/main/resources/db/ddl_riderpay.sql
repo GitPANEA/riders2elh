@@ -25,7 +25,7 @@ CREATE TABLE T_BATCH_CARICAMENTO (
   DT_RICEZIONE          TIMESTAMP NOT NULL,          -- quando l API ha ricevuto la request
   DT_INIZIO_ELABORAZIONE TIMESTAMP,
   DT_FINE_ELABORAZIONE  TIMESTAMP,
-  ESITO                 VARCHAR2(10),               -- OK | KO | PARZIALE
+  ESITO                 VARCHAR2(20),               -- IN_CORSO | OK | KO | PARZIALE | ERRORE_TECNICO
   NUM_RECORD_TOTALI     NUMBER,
   NUM_RECORD_OK         NUMBER,
   NUM_RECORD_KO         NUMBER,
@@ -39,6 +39,7 @@ CREATE TABLE T_BATCH_CARICAMENTO_ERRORE (
   CHIAVE_BUSINESS  VARCHAR2(200),      -- es. id_rider o id_movimentazione del record fallito
   MESSAGGIO_ERRORE VARCHAR2(4000),
   PAYLOAD_JSON     CLOB,               -- record originale, per poter fare replay/debug
+  NUMERO_RIGA      NUMBER,             -- posizione del record nel payload originale (0-based)
   DT_INSERIMENTO   TIMESTAMP DEFAULT SYSTIMESTAMP
 );
 

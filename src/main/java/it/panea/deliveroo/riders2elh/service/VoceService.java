@@ -1,5 +1,6 @@
 package it.panea.deliveroo.riders2elh.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.panea.deliveroo.riders2elh.common.*;
 import it.panea.deliveroo.riders2elh.dto.AnnullamentoResponse;
 import it.panea.deliveroo.riders2elh.dto.BatchEsitoResponse;
@@ -10,7 +11,9 @@ import it.panea.deliveroo.riders2elh.repository.VoceRepository;
 import it.panea.deliveroo.riders2elh.repository.VoceRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,34 +30,73 @@ public class VoceService {
     private final VoceRepository repository;
     private final MasterKeyRepository masterKeyRepository;
     private final BatchCaricamentoRepository batchRepository;
+    private final ObjectMapper objectMapper;
+    private final int intervalloProgresso;
 
     public VoceService(VoceRepository repository, MasterKeyRepository masterKeyRepository,
-                        BatchCaricamentoRepository batchRepository) {
+                        BatchCaricamentoRepository batchRepository, ObjectMapper objectMapper,
+                        @Value("${riders2eLH.batch.intervallo-progresso:1000}") int intervalloProgresso) {
         this.repository = repository;
         this.masterKeyRepository = masterKeyRepository;
         this.batchRepository = batchRepository;
+        this.objectMapper = objectMapper;
+        this.intervalloProgresso = intervalloProgresso;
     }
 
-    public BatchEsitoResponse carica(List<VoceDto> lista, String nomeFileOrigine, String checksum, String clientId) {
-        long idBatch = batchRepository.creaBatch(TipoEntita.VOCE, TipoOperazione.CARICAMENTO, null,
+    /**
+     * Avvio: crea il batch e ritorna subito. Il controller risponde 202 con l'id batch
+     * e affida l'elaborazione a {@link #elaboraAsync} (invocata dal controller, non da
+     * qui: una self-invocation non passerebbe dal proxy Spring che rende @Async effettivo).
+     */
+    public long avviaCaricamento(List<VoceDto> lista, String nomeFileOrigine, String checksum, String clientId) {
+        return batchRepository.creaBatch(TipoEntita.VOCE, TipoOperazione.CARICAMENTO, null,
                 null, nomeFileOrigine, "CSV", clientId, checksum);
+    }
+
+    @Async("batchTaskExecutor")
+    public void elaboraAsync(long idBatch, List<VoceDto> lista) {
         int ok = 0, ko = 0;
-        for (VoceDto dto : lista) {
+        try {
+            batchRepository.avviaElaborazione(idBatch, lista.size());
+            for (int i = 0; i < lista.size(); i++) {
+                VoceDto dto = lista.get(i);
+                try {
+                    caricaSingola(dto, idBatch);
+                    ok++;
+                } catch (Exception e) {
+                    ko++;
+                    log.error("Batch {}: caricamento fallito per la voce {}", idBatch, dto.idVoce(), e);
+                    batchRepository.registraErrore(idBatch, i, dto.idVoce(), messaggioCompleto(e), payloadJson(dto));
+                }
+                if ((ok + ko) % intervalloProgresso == 0) {
+                    batchRepository.aggiornaProgresso(idBatch, ok, ko);
+                }
+            }
+            EsitoBatch esito = ko == 0 ? EsitoBatch.OK : (ok == 0 ? EsitoBatch.KO : EsitoBatch.PARZIALE);
+            batchRepository.chiudiBatch(idBatch, esito, lista.size(), ok, ko);
+        } catch (Exception e) {
+            log.error("Batch {}: elaborazione interrotta da un errore tecnico", idBatch, e);
             try {
-                caricaSingola(dto, idBatch);
-                ok++;
-            } catch (Exception e) {
-                ko++;
-                log.error("Batch {}: caricamento fallito per la voce {}", idBatch, dto.idVoce(), e);
-                batchRepository.registraErrore(idBatch, dto.idVoce(), messaggioCompleto(e), dto.toString());
+                batchRepository.chiudiBatch(idBatch, EsitoBatch.ERRORE_TECNICO, lista.size(), ok, ko);
+            } catch (Exception e2) {
+                log.error("Batch {}: impossibile marcare il batch come ERRORE_TECNICO, resta IN_CORSO", idBatch, e2);
             }
         }
-        EsitoBatch esito = ko == 0 ? EsitoBatch.OK : (ok == 0 ? EsitoBatch.KO : EsitoBatch.PARZIALE);
-        batchRepository.chiudiBatch(idBatch, esito, lista.size(), ok, ko);
-        return new BatchEsitoResponse(idBatch, TipoOperazione.CARICAMENTO, esito, lista.size(), ok, ko, Instant.now());
+    }
+
+    private String payloadJson(VoceDto dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (Exception e) {
+            return dto.toString();
+        }
     }
 
     private void caricaSingola(VoceDto dto, long idBatch) {
+        List<String> violazioni = ValidatoreFormato.validaVoce(dto);
+        if (!violazioni.isEmpty()) {
+            throw new RecordNonValidoException(violazioni);
+        }
         masterKeyRepository.assicuraVoce(dto.idVoce());
         var correnteEsistente = repository.trovaVersioneCorrente(dto.idVoce());
         if (correnteEsistente.isPresent() && correnteEsistente.get().dati().equals(dto)) {

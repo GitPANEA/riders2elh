@@ -16,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.time.Instant;
@@ -99,6 +100,17 @@ public class GlobalExceptionHandler {
         return errore(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                 "Content-Type non supportato: " + e.getContentType()
                         + (supportati.isEmpty() ? "" : ". Attesi: " + supportati));
+    }
+
+    /**
+     * File multipart più grande del limite configurato ({@code spring.servlet.multipart.max-file-size},
+     * oggi 20MB — rilevante per {@code POST /voci}, l'unico endpoint con upload). Senza questo
+     * handler l'eccezione cadeva nella rete {@code Exception}→500: un limite di dimensione
+     * violato dal chiamante è un errore della richiesta, non un bug del server.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> gestisciUploadTroppoGrande(MaxUploadSizeExceededException e) {
+        return errore(HttpStatus.PAYLOAD_TOO_LARGE, "File troppo grande. Limite massimo consentito superato.");
     }
 
     /** Metodo HTTP non previsto sul path (es. GET su un endpoint solo POST). */

@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.panea.deliveroo.riders2elh.common.ChecksumUtils;
+import it.panea.deliveroo.riders2elh.common.EsitoBatch;
 import it.panea.deliveroo.riders2elh.common.SecurityUtils;
+import it.panea.deliveroo.riders2elh.common.TipoOperazione;
 import it.panea.deliveroo.riders2elh.dto.*;
 import it.panea.deliveroo.riders2elh.repository.MovimentazioneHeaderRow;
 import it.panea.deliveroo.riders2elh.repository.MovimentazioneRow;
@@ -19,6 +21,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -34,27 +37,34 @@ public class MovimentazioneController {
         this.service = service;
     }
 
-    /** POST /api/v1/movimentazioni — ingestione di movimentazioni.json (§ 9). */
+    /** POST /api/v1/movimentazioni — ingestione di movimentazioni.json (§ 9), asincrona. */
     @Operation(summary = "Ingestione movimentazioni",
             description = """
-                    Carica movimentazioni.json, comprensivo del dettaglio consegne e voci. Ogni \
-                    record genera una nuova versione datata; le tabelle di dettaglio seguono il \
-                    partizionamento del padre (PARTITION BY REFERENCE).
+                    Avvia il caricamento di movimentazioni.json, comprensivo del dettaglio consegne \
+                    e voci: risponde subito con l'id del batch, poi elabora la lista su un thread \
+                    separato. Per l'esito (contatori, eventuali errori) fare polling su \
+                    GET /api/v1/batch/{idBatch}.
+
+                    Ogni record genera una nuova versione datata; le tabelle di dettaglio seguono \
+                    il partizionamento del padre (PARTITION BY REFERENCE).
 
                     Gli errori sono per record e non interrompono il caricamento: vengono \
                     registrati in T_BATCH_CARICAMENTO_ERRORE.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Tutte le movimentazioni caricate"),
-            @ApiResponse(responseCode = "207", description = "Caricamento parziale: almeno un record "
-                    + "in errore"),
+            @ApiResponse(responseCode = "202", description = "Richiesta accettata: il batch è "
+                    + "stato creato ed è in elaborazione. La risposta riporta solo l'id batch, "
+                    + "i contatori non sono ancora definitivi."),
             @ApiResponse(responseCode = "400", description = "Payload non valido",
                     content = @Content(schema = @Schema(implementation = ErroreResponse.class)))
     })
     @PostMapping("/movimentazioni")
     public ResponseEntity<BatchEsitoResponse> carica(@RequestBody @Valid List<MovimentazioneDto> lista) {
         String checksum = ChecksumUtils.sha256(lista.toString());
-        BatchEsitoResponse esito = service.carica(lista, "movimentazioni.json", checksum, SecurityUtils.clientIdAutenticato());
-        return ResponseEntity.status(esito.recordKo() == 0 ? 201 : 207).body(esito);
+        String clientId = SecurityUtils.clientIdAutenticato();
+        long idBatch = service.avviaCaricamento(lista, "movimentazioni.json", checksum, clientId);
+        service.elaboraAsync(idBatch, lista);
+        return ResponseEntity.status(202).body(new BatchEsitoResponse(
+                idBatch, TipoOperazione.CARICAMENTO, EsitoBatch.IN_CORSO, lista.size(), 0, 0, Instant.now()));
     }
 
     /** GET /api/v1/rider/{idRider}/movimentazioni — elenco correnti, filtrabile per periodo (§ 9). */

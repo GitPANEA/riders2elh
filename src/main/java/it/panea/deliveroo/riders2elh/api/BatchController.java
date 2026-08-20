@@ -11,6 +11,7 @@ import it.panea.deliveroo.riders2elh.common.SecurityUtils;
 import it.panea.deliveroo.riders2elh.dto.AnnullamentoBatchResponse;
 import it.panea.deliveroo.riders2elh.dto.ErroreResponse;
 import it.panea.deliveroo.riders2elh.dto.MotivoRequest;
+import it.panea.deliveroo.riders2elh.repository.BatchErroreRow;
 import it.panea.deliveroo.riders2elh.repository.BatchRow;
 import it.panea.deliveroo.riders2elh.service.BatchQueryService;
 import jakarta.validation.Valid;
@@ -35,9 +36,18 @@ public class BatchController {
 
     /** GET /api/v1/batch/{idBatch} — esito elaborazione, errori associati (§ 9). */
     @Operation(summary = "Esito di un singolo batch",
-            description = "Restituisce l'esito dell'elaborazione di un batch: contatori dei "
-                    + "record elaborati, data di fine elaborazione, eventuale batch di "
-                    + "riferimento (valorizzato su annullamenti e rettifiche).")
+            description = """
+                    Restituisce l'esito dell'elaborazione di un batch: contatori dei record \
+                    elaborati, data di fine elaborazione, eventuale batch di riferimento \
+                    (valorizzato su annullamenti e rettifiche).
+
+                    Le tre POST di caricamento sono asincrone: rispondono subito 202 con l'id \
+                    batch, quindi questo endpoint è il punto di polling per conoscere l'esito. \
+                    esito=IN_CORSO significa elaborazione ancora in corso (i contatori non sono \
+                    definitivi); esito=ERRORE_TECNICO significa che il task si è interrotto per \
+                    un problema tecnico, non per i dati. probabilmenteBloccato=true segnala un \
+                    batch IN_CORSO da più della soglia configurata: nessuna scrittura avviene per \
+                    calcolarlo, è solo un avviso.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Batch trovato"),
             @ApiResponse(responseCode = "404", description = "Nessun batch con questo id",
@@ -48,6 +58,28 @@ public class BatchController {
             @Parameter(description = "Identificativo del batch", example = "17")
             @PathVariable long idBatch) {
         return ResponseEntity.ok(service.leggi(idBatch));
+    }
+
+    /** GET /api/v1/batch/{idBatch}/errori — righe anomale registrate durante l'elaborazione del batch. */
+    @Operation(summary = "Righe anomale di un batch",
+            description = "Elenca i record scartati durante l'elaborazione del batch (validazione "
+                    + "di formato/coerenza o errore tecnico), con numero di riga nel payload "
+                    + "originale, chiave business, messaggio d'errore e payload JSON del record. "
+                    + "Risposta paginata: un batch con molti record può generare molte righe di errore.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pagina di righe anomale (eventualmente vuota)"),
+            @ApiResponse(responseCode = "400", description = "page o size non validi",
+                    content = @Content(schema = @Schema(implementation = ErroreResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Nessun batch con questo id",
+                    content = @Content(schema = @Schema(implementation = ErroreResponse.class)))
+    })
+    @GetMapping("/{idBatch}/errori")
+    public ResponseEntity<List<BatchErroreRow>> errori(
+            @Parameter(description = "Identificativo del batch", example = "17")
+            @PathVariable long idBatch,
+            @Parameter(description = "Numero di pagina, a partire da 0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Dimensione della pagina") @RequestParam(defaultValue = "100") int size) {
+        return ResponseEntity.ok(service.elencaErrori(idBatch, page, size));
     }
 
     /**

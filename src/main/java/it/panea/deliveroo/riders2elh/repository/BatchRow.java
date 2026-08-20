@@ -15,9 +15,16 @@ public record BatchRow(
         String nomeFileOrigine,
         String clientId,
         Instant dtRicezione,
+        Instant dtInizioElaborazione,
         Instant dtFineElaborazione,
         EsitoBatch esito,
         Integer numRecordTotali,
         Integer numRecordOk,
-        Integer numRecordKo
+        Integer numRecordKo,
+        /**
+         * Calcolato in lettura (non da colonna): true se il batch è IN_CORSO da più
+         * tempo della soglia configurata — segnale di possibile blocco del task
+         * asincrono, senza bisogno di scrivere nulla sulla riga per rilevarlo.
+         */
+        boolean probabilmenteBloccato
 ) {}

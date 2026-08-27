@@ -25,7 +25,12 @@ public final class ValidatoreFormato {
     private static final Pattern TELEFONO_CIFRE = Pattern.compile("[0-9]");
     private static final Pattern CODICE_FISCALE_FORMATO =
             Pattern.compile("^[A-Z]{6}[0-9]{2}[A-EHLMPR-T][0-9]{2}[A-Z][0-9]{3}[A-Z]$");
-    private static final Pattern MESE_RIFERIMENTO = Pattern.compile("^(0[1-9]|1[0-2])-\\d{4}$");
+    // Formato yyyy-mm: allineato al commento di colonna e al CHECK Oracle
+    // CK_MOVVOCE_MESE_RIFERIMENTO su T_MOVIMENTAZIONE_VOCE_ST.MESE_RIFERIMENTO
+    // (docs/db/05-ddl-check-coerenza.sql). Il pattern precedente (mm-yyyy) era invertito
+    // rispetto al DB fin dall'introduzione della validazione: un valore corretto secondo
+    // lo schema (es. "2026-06") veniva respinto dall'applicazione prima di raggiungere Oracle.
+    private static final Pattern MESE_RIFERIMENTO = Pattern.compile("^\\d{4}-(0[1-9]|1[0-2])$");
 
     // Algoritmo standard del carattere di controllo del codice fiscale italiano:
     // valore convenzionale di ogni carattere in base alla posizione (pari/dispari,
@@ -78,7 +83,7 @@ public final class ValidatoreFormato {
         for (VoceMovimentazioneDto voce : voci) {
             String mese = voce.meseRiferimento();
             if (!isBlank(mese) && !MESE_RIFERIMENTO.matcher(mese).matches()) {
-                violazioni.add("mese_riferimento non valido, atteso mm-yyyy: " + mese);
+                violazioni.add("mese_riferimento non valido, atteso yyyy-mm: " + mese);
             }
         }
     }

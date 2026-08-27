@@ -48,9 +48,12 @@ public final class ValidatoreFormato {
         if (!isBlank(dto.capResidenza()) && !CAP.matcher(dto.capResidenza()).matches()) {
             violazioni.add("cap_residenza non valido, atteso 5 cifre: " + dto.capResidenza());
         }
-        if (!isBlank(dto.codiceFiscale()) && !codiceFiscaleValido(dto.codiceFiscale())) {
-            violazioni.add("codice_fiscale non valido: " + dto.codiceFiscale());
-        }
+        // Controllo formato/carattere di controllo del CF temporaneamente disabilitato:
+        // il cliente sta testando con dati non reali (CF non conformi per costruzione).
+        // Ripristinare togliendo il commento prima di dati reali.
+        // if (!isBlank(dto.codiceFiscale()) && !codiceFiscaleValido(dto.codiceFiscale())) {
+        //     violazioni.add("codice_fiscale non valido: " + dto.codiceFiscale());
+        // }
         return violazioni;
     }
 

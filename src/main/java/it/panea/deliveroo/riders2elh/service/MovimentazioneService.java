@@ -8,7 +8,6 @@ import it.panea.deliveroo.riders2elh.dto.MovimentazioneDto;
 import it.panea.deliveroo.riders2elh.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -29,16 +28,13 @@ public class MovimentazioneService {
     private final MasterKeyRepository masterKeyRepository;
     private final BatchCaricamentoRepository batchRepository;
     private final ObjectMapper objectMapper;
-    private final int intervalloProgresso;
 
     public MovimentazioneService(MovimentazioneRepository repository, MasterKeyRepository masterKeyRepository,
-                                  BatchCaricamentoRepository batchRepository, ObjectMapper objectMapper,
-                                  @Value("${riders2eLH.batch.intervallo-progresso:1000}") int intervalloProgresso) {
+                                  BatchCaricamentoRepository batchRepository, ObjectMapper objectMapper) {
         this.repository = repository;
         this.masterKeyRepository = masterKeyRepository;
         this.batchRepository = batchRepository;
         this.objectMapper = objectMapper;
-        this.intervalloProgresso = intervalloProgresso;
     }
 
     /**
@@ -65,9 +61,6 @@ public class MovimentazioneService {
                     ko++;
                     log.error("Batch {}: caricamento fallito per la movimentazione {}", idBatch, dto.idMovimentazione(), e);
                     batchRepository.registraErrore(idBatch, i, dto.idMovimentazione(), messaggioCompleto(e), payloadJson(dto));
-                }
-                if ((ok + ko) % intervalloProgresso == 0) {
-                    batchRepository.aggiornaProgresso(idBatch, ok, ko);
                 }
             }
             EsitoBatch esito = ko == 0 ? EsitoBatch.OK : (ok == 0 ? EsitoBatch.KO : EsitoBatch.PARZIALE);

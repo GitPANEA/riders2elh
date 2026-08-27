@@ -68,18 +68,6 @@ public class BatchCaricamentoRepository {
                 """, Timestamp.from(Instant.now()), EsitoBatch.IN_CORSO.name(), totali, idBatch);
     }
 
-    /**
-     * Aggiornamento incrementale dei contatori durante l'elaborazione, per un polling
-     * che mostri progresso reale. Chiamato ogni N record (soglia configurabile) e non a
-     * ogni record: un UPDATE per record raddoppierebbe il carico di scrittura sul batch
-     * per un beneficio di sola leggibilità del polling.
-     */
-    public void aggiornaProgresso(long idBatch, int ok, int ko) {
-        jdbcTemplate.update("""
-                UPDATE T_BATCH_CARICAMENTO SET NUM_RECORD_OK = ?, NUM_RECORD_KO = ? WHERE ID_BATCH = ?
-                """, ok, ko, idBatch);
-    }
-
     public void registraErrore(long idBatch, Integer numeroRiga, String chiaveBusiness, String messaggioErrore, String payloadJson) {
         jdbcTemplate.update("""
                 INSERT INTO T_BATCH_CARICAMENTO_ERRORE (ID_BATCH, NUMERO_RIGA, CHIAVE_BUSINESS, MESSAGGIO_ERRORE, PAYLOAD_JSON)

@@ -28,12 +28,10 @@
     },
     {
       "key": "clientSecret",
-      "value": "-ovci-UPmmduwbc0nL3ta-lkzsZt9PhpUJ4TckxVp0E",
       "type": "string"
     },
     {
       "key": "accessToken",
-      "value": "",
       "type": "string"
     },
     {

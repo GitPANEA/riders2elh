@@ -24,3 +24,8 @@ target/
 *.jks
 *_deploy_key
 *.pem
+
+# Dataset di test generati sinteticamente per prove di carico (decine di MB,
+# fino a >150MB per movimentazioni.json): restano locali, non nel repo.
+# docs/v1/ (pochi record di esempio, citati in CLAUDE.md) resta versionato.
+docs/v2/

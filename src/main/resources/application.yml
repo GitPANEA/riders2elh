@@ -45,11 +45,6 @@ riders2eLH:
       # va concordato con chi li verifica; il rename del progetto non lo tocca.
       issuer: riderpay-auth-server
   batch:
-    # Ogni quanti record elaborati (ok+ko) aggiornare NUM_RECORD_OK/KO durante
-    # l'elaborazione asincrona, per un polling che mostri progresso reale. Un valore
-    # troppo basso moltiplica gli UPDATE su T_BATCH_CARICAMENTO senza reale beneficio;
-    # troppo alto rende il polling poco informativo su batch piccoli.
-    intervallo-progresso: 1000
     # Da quanti minuti IN_CORSO un batch è segnalato come "probabilmente bloccato" in
     # GET /batch — calcolato in lettura, nessuna scrittura sulla riga. Nessun batch reale
     # dovrebbe restare IN_CORSO così a lungo: superata la soglia è più probabile un task

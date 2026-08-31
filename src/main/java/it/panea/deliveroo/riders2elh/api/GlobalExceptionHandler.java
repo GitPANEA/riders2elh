@@ -15,6 +15,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
@@ -82,6 +83,22 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> gestisciValidazione(MethodArgumentNotValidException e) {
+        return errore(HttpStatus.BAD_REQUEST, "Payload non valido: " + e.getMessage());
+    }
+
+    /**
+     * Violazione di @Valid quando l'argomento validato non è un singolo oggetto ma una
+     * collezione grezza (es. {@code @RequestBody @Valid List<RiderAnagraficaDto>} nelle tre
+     * POST di caricamento): da Spring Framework 6.1 questo caso non passa più per
+     * {@link MethodArgumentNotValidException}, ma per questo nuovo tipo, introdotto insieme al
+     * meccanismo di "method validation". Senza questo handler cadeva nella rete
+     * {@code Exception}→500, presentando come bug del server quello che Spring stesso aveva già
+     * classificato come 400 (lo status è nel messaggio stesso dell'eccezione — vedi
+     * {@code e.getStatusCode()}) — osservato in dev il 31 agosto 2026 su un caricamento reale
+     * del cliente, con un record che violava un vincolo sui DTO della lista.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Map<String, Object>> gestisciValidazioneMetodo(HandlerMethodValidationException e) {
         return errore(HttpStatus.BAD_REQUEST, "Payload non valido: " + e.getMessage());
     }
 

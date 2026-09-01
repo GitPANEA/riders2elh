@@ -20,6 +20,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
+import org.springframework.context.MessageSourceResolvable;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -99,7 +101,18 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<Map<String, Object>> gestisciValidazioneMetodo(HandlerMethodValidationException e) {
-        return errore(HttpStatus.BAD_REQUEST, "Payload non valido: " + e.getMessage());
+        // e.getMessage() da solo vale "400 BAD_REQUEST \"Validation failure\"": non nomina né il
+        // campo né il vincolo violato. Il dettaglio reale sta negli AllValidationResults, uno per
+        // parametro annotato coinvolto (qui in pratica sempre il singolo @RequestBody List<...>);
+        // getContainerIndex() è l'indice nella lista quando il parametro è una collezione, quindi
+        // qui coincide con la posizione del record malformato nel payload originale.
+        String dettaglio = e.getAllValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream()
+                        .map(errore -> (r.getContainerIndex() != null ? "elemento " + r.getContainerIndex() + ": " : "")
+                                + errore.getDefaultMessage()))
+                .collect(Collectors.joining("; "));
+        return errore(HttpStatus.BAD_REQUEST, "Payload non valido: "
+                + (dettaglio.isBlank() ? e.getMessage() : dettaglio));
     }
 
     /**
